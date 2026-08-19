@@ -9,7 +9,6 @@ class CreateEvents < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :events, :event_type
     add_index :events, :occurred_at
     add_index :events, [ :event_type, :occurred_at ]
   end

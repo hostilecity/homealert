@@ -18,12 +18,13 @@ module Webhooks
     private
 
     def payload
-      # Accept both JSON body and form-encoded params
-      if request.content_type&.include?("application/json")
-        JSON.parse(request.body.read)
-      else
-        params.to_unsafe_h.except("controller", "action")
+      unless request.content_type&.include?("application/json")
+        raise Webhooks::UnknownEventError, "Unsupported content type: #{request.content_type.inspect}"
       end
+
+      JSON.parse(request.body.read)
+    rescue JSON::ParserError => e
+      raise Webhooks::UnknownEventError, "Invalid JSON payload: #{e.message}"
     end
   end
 end
