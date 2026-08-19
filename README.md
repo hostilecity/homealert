@@ -17,7 +17,7 @@ Current scope:
 
 ### Prerequisites
 
-- Ruby 3.2.7 (via [chruby](https://github.com/postmodern/chruby) + [ruby-install](https://github.com/postmodern/ruby-install))
+- Ruby 3.4.10 (via [chruby](https://github.com/postmodern/chruby) + [ruby-install](https://github.com/postmodern/ruby-install))
 - PostgreSQL
 - A Google OAuth2 client ([console.cloud.google.com](https://console.cloud.google.com))
 
