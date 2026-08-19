@@ -6,7 +6,7 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    session.delete(:user_id)
+    reset_session
     redirect_to login_path, notice: "You have been signed out."
   end
 
