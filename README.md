@@ -71,3 +71,49 @@ ALLOWED_EMAILS=alice@example.com,bob@example.com
 - Email matching is case-insensitive.
 - Accounts not on the list will be redirected back to the login screen with an error.
 - To add or remove access, update `ALLOWED_EMAILS` and restart the server.
+
+## Webhooks
+
+### ReoLink doorbell (`POST /webhooks/reolink`)
+
+The endpoint accepts JSON only. A `200 OK` is returned on success; `422 Unprocessable Entity` is returned for unrecognised event types or invalid payloads.
+
+**Doorbell press (Visitor alert):**
+
+```bash
+curl -X POST http://localhost:3000/webhooks/reolink \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "alarm": {
+      "alarmTime": "2026-08-17T17:04:34.000+0000",
+      "channel": 0,
+      "channelName": "doorbell",
+      "device": "doorbell",
+      "deviceModel": "Reolink Video Doorbell WiFi",
+      "message": "A Visitor is Ringing the doorbell",
+      "name": "Visitor Alert",
+      "title": "Visitor message",
+      "type": "VISITOR"
+    }
+  }'
+```
+
+**Motion detection (Person detected):**
+
+```bash
+curl -X POST http://localhost:3000/webhooks/reolink \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "alarm": {
+      "alarmTime": "2026-08-17T16:59:33.000+0000",
+      "channel": 0,
+      "channelName": "doorbell",
+      "device": "doorbell",
+      "deviceModel": "Reolink Video Doorbell WiFi",
+      "message": "Person Detected from doorbell",
+      "name": "Person Detected from doorbell",
+      "title": "Camera Alert",
+      "type": "PEOPLE"
+    }
+  }'
+```
