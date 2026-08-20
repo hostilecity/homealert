@@ -1,20 +1,44 @@
 // HomeAlert Service Worker
 // Handles Web Push delivery and notification click-through.
 
-// Take control immediately on install without waiting for existing tabs to close.
 self.addEventListener("install", (event) => {
   self.skipWaiting()
 })
 
-// Claim all open clients so this service worker is active right away.
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim())
 })
 
 self.addEventListener("push", (event) => {
-  if (!event.data) return
+  console.log("[SW] push event received", event)
+  console.log("[SW] event.data:", event.data)
 
-  const data = event.data.json()
+  if (!event.data) {
+    console.warn("[SW] push event has no data — showing fallback notification")
+    event.waitUntil(
+      self.registration.showNotification("HomeAlert", {
+        body: "New event received",
+        icon: "/icon.png"
+      })
+    )
+    return
+  }
+
+  let data
+  try {
+    data = event.data.json()
+    console.log("[SW] parsed push data:", data)
+  } catch (e) {
+    console.error("[SW] failed to parse push data as JSON:", e)
+    console.log("[SW] raw text:", event.data.text())
+    event.waitUntil(
+      self.registration.showNotification("HomeAlert", {
+        body: "New event received",
+        icon: "/icon.png"
+      })
+    )
+    return
+  }
 
   event.waitUntil(
     self.registration.showNotification(data.title, {
