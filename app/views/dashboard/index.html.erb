@@ -2,12 +2,6 @@
 
 <div class="space-y-8">
 
-  <!-- Page heading -->
-  <div>
-    <h2 class="text-xl font-semibold">Dashboard</h2>
-    <p class="mt-1 text-sm text-gray-400">Recent activity from your home security devices.</p>
-  </div>
-
   <!-- Stat cards -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
@@ -44,20 +38,48 @@
   </div>
 
   <!-- Recent events feed -->
-  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+  <%
+    newest_event       = @recent_events_by_date.values.first&.first
+    oldest_event       = @recent_events_by_date.values.last&.last
+    has_more           = @recent_events_by_date.values.sum(&:length) == 10
+  %>
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
+       data-controller="feed"
+       data-feed-url-value="<%= events_feed_path %>"
+       data-feed-newest-id-value="<%= newest_event&.id.to_i %>"
+       data-feed-oldest-occurred-at-value="<%= oldest_event&.occurred_at&.iso8601 %>">
 
     <% if @recent_events_by_date.any? %>
-      <% @recent_events_by_date.each_with_index do |(date, events), index| %>
-        <%= render "date_divider", label: event_date_label(date), first: index.zero? %>
-        <%= render partial: "event_row", collection: events, as: :event %>
-      <% end %>
-      <div class="px-5 py-3 border-t border-gray-800 text-center">
-        <a href="#" class="text-xs text-indigo-400 hover:text-indigo-300 transition">View all events</a>
+
+      <!-- Prepend target: new events are injected here -->
+      <div data-feed-target="list">
+        <%= render "feed_rows",
+                   events: @recent_events_by_date.values.flatten,
+                   context: :initial,
+                   last_date: nil %>
       </div>
+
+      <!-- View more footer -->
+      <div id="view-more-footer"
+           class="px-5 py-3 border-t border-gray-800 text-center"
+           data-feed-target="footer">
+        <% if has_more %>
+          <button class="text-xs text-indigo-400 hover:text-indigo-300 transition"
+                  data-action="click->feed#loadMore">
+            View more
+          </button>
+        <% end %>
+      </div>
+
     <% else %>
-      <div class="px-5 py-12 text-center">
+      <div data-feed-target="list"></div>
+      <div class="px-5 py-12 text-center" data-feed-target="empty">
         <p class="text-sm text-gray-500">No events yet. Events will appear here once your devices are connected.</p>
       </div>
+      <!-- Footer target always present so polling can insert View more after first events arrive -->
+      <div id="view-more-footer"
+           class="hidden"
+           data-feed-target="footer"></div>
     <% end %>
 
   </div>

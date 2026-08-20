@@ -14,6 +14,9 @@ Rails.application.routes.draw do
     post "reolink", to: "reolink#create"
   end
 
+  # Events feed (AJAX, authenticated)
+  get "events/feed", to: "events#feed", as: :events_feed
+
   # Public pages
   get "privacy", to: "pages#privacy", as: :privacy
 

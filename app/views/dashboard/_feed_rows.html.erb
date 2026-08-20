@@ -1,0 +1,41 @@
+<%#
+  Renders grouped event rows with date dividers.
+
+  locals:
+    events    - Array/Relation of Event records (newest-first)
+    context   - :initial | :poll | :append
+    last_date - For :append only: date of the last already-visible event above;
+                suppresses the leading divider when it matches, avoiding duplicates
+    has_more  - boolean; controls "View more" button visibility
+%>
+<%
+  groups = events
+    .sort_by { |e| -e.occurred_at.to_i }
+    .group_by { |e| e.occurred_at.in_time_zone.to_date }
+    .to_a
+%>
+
+<% groups.each_with_index do |(date, group_events), index| %>
+  <%
+    suppress = context == :append && index.zero? && last_date == date
+    first    = (context == :initial || context == :poll) && index.zero?
+  %>
+  <% unless suppress %>
+    <%= render "dashboard/date_divider", label: event_date_label(date), first: first %>
+  <% end %>
+  <%= render partial: "dashboard/event_row", collection: group_events, as: :event %>
+<% end %>
+
+<%# Emit the footer for both :poll (replace in place) and :append (insert after rows) %>
+<% if context == :poll || context == :append %>
+  <div id="view-more-footer"
+       class="px-5 py-3 border-t border-gray-800 text-center"
+       data-feed-target="footer">
+    <% if defined?(has_more) && has_more %>
+      <button class="text-xs text-indigo-400 hover:text-indigo-300 transition"
+              data-action="click->feed#loadMore">
+        View more
+      </button>
+    <% end %>
+  </div>
+<% end %>
