@@ -2,50 +2,26 @@
   Renders grouped event rows with date dividers.
 
   locals:
-    events    - ActiveRecord::Relation or Array of Event records
-    context   - :initial | :prepend | :append
-    last_date - For :append: date of the last already-visible event below (suppress leading divider on match)
-                For :prepend: date of the first already-visible event above (suppress trailing divider on match)
-    has_more  - boolean; only relevant for :append
+    events    - Array/Relation of Event records (newest-first)
+    context   - :initial | :poll | :append
+    last_date - For :append only: date of the last already-visible event above;
+                suppresses the leading divider when it matches, avoiding duplicates
+    has_more  - boolean; controls "View more" button visibility
 %>
 <%
-  # Sort newest-first regardless of input order, then group by local date.
-  # sort_by ensures same-date events are always adjacent before group_by runs,
-  # preventing duplicate date groups when occurred_at spans a timezone boundary.
-  sorted = events.sort_by { |e| -e.occurred_at.to_i }
-  groups = sorted.group_by { |e| e.occurred_at.in_time_zone.to_date }.to_a
-
-  # For :prepend the server receives events oldest-first (so prepend puts newest on top).
-  # We reverse the groups so the oldest group is rendered first in HTML — after prepend
-  # it will sit at the bottom of the injected chunk, directly above the existing rows.
-  groups = groups.reverse if context == :prepend
+  groups = events
+    .sort_by { |e| -e.occurred_at.to_i }
+    .group_by { |e| e.occurred_at.in_time_zone.to_date }
+    .to_a
 %>
 
 <% groups.each_with_index do |(date, group_events), index| %>
   <%
-    last_group = index == groups.size - 1
-
-    suppress_divider = case context
-    when :initial
-      # No suppression for initial render — first group has no top border
-      false
-    when :prepend
-      # Suppress divider on the last group (bottom of chunk) if it matches
-      # the date already at the top of the existing feed
-      last_group && last_date == date
-    when :append
-      # Suppress divider on the first group (top of chunk) if it matches
-      # the date already at the bottom of the existing feed
-      index.zero? && last_date == date
-    end
-
-    first_in_card = context == :initial && index.zero?
+    suppress = context == :append && index.zero? && last_date == date
+    first    = (context == :initial || context == :poll) && index.zero?
   %>
-
-  <% unless suppress_divider %>
-    <%= render "dashboard/date_divider",
-               label: event_date_label(date),
-               first: first_in_card %>
+  <% unless suppress %>
+    <%= render "dashboard/date_divider", label: event_date_label(date), first: first %>
   <% end %>
   <%= render partial: "dashboard/event_row", collection: group_events, as: :event %>
 <% end %>

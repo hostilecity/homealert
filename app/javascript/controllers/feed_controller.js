@@ -8,8 +8,7 @@ export default class extends Controller {
     url:        String,
     newestId:   Number,
     oldestId:   Number,
-    oldestDate: String,
-    newestDate: String
+    oldestDate: String
   }
 
   connect() {
@@ -21,61 +20,49 @@ export default class extends Controller {
     clearInterval(this.timer)
   }
 
-  // ── Polling: fetch events newer than newestId ─────────────────────────────
+  // ── Polling: replace the entire list if anything is new ──────────────────
 
   async poll() {
-    if (this.newestIdValue === 0) {
-      await this.pollEmpty()
-      return
-    }
+    const url = `${this.urlValue}?poll=1&newest_id=${this.newestIdValue}`
+    const response = await this.fetchResponse(url)
+    if (!response) return
 
-    // Pass first_date so the server can suppress the leading divider if the
-    // newest returned group shares a date with the current top of the feed.
-    const url = `${this.urlValue}?after_id=${this.newestIdValue}&first_date=${this.newestDateValue}`
-    const html = await this.fetchHtml(url)
-    if (!html || !html.trim()) return
+    // 204 No Content means nothing has changed — do nothing
+    if (response.status === 204) return
 
-    const fragment = this.parseFragment(html)
-    if (!fragment.children.length) return
+    const html = await response.text()
+    if (!html.trim()) return
 
-    // Server returns events oldest-first; prepending puts newest at the top.
-    this.listTarget.prepend(...fragment.childNodes)
+    // Replace the entire list with the freshly-rendered server HTML.
+    // This is safe because the feed is small (≤ 10 rows) and eliminates
+    // all DOM-merging complexity that caused duplicate date headers.
+    this.listTarget.innerHTML = html
 
     if (this.hasEmptyTarget) this.emptyTarget.remove()
     this.updateCursors()
   }
 
-  async pollEmpty() {
-    const url = `${this.urlValue}?after_id=0`
-    const html = await this.fetchHtml(url)
-    if (!html || !html.trim()) return
-
-    const fragment = this.parseFragment(html)
-    if (!fragment.children.length) return
-
-    this.listTarget.append(...fragment.childNodes)
-    if (this.hasEmptyTarget) this.emptyTarget.remove()
-    this.updateCursors()
-  }
-
-  // ── View more: fetch events older than oldestId ───────────────────────────
+  // ── View more: append next page of older events ───────────────────────────
 
   async loadMore() {
     if (this.oldestIdValue === 0) return
 
     const url = `${this.urlValue}?before_id=${this.oldestIdValue}&last_date=${this.oldestDateValue}`
-    const html = await this.fetchHtml(url)
+    const response = await this.fetchResponse(url)
+    if (!response || response.status === 204) return
+
+    const html = await response.text()
     if (!html) return
 
     const fragment = this.parseFragment(html)
 
-    // Replace the footer in-place with the server-rendered one
+    // Replace the footer with the server-rendered one (hides button when no more pages)
     const newFooter = fragment.querySelector("#view-more-footer")
     if (newFooter && this.hasFooterTarget) {
       this.footerTarget.replaceWith(newFooter)
     }
 
-    // Append event rows to the list (before the footer)
+    // Append event rows to the list
     const rows = [...fragment.childNodes].filter(n => n.id !== "view-more-footer")
     rows.forEach(n => this.listTarget.appendChild(n))
 
@@ -84,13 +71,11 @@ export default class extends Controller {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  async fetchHtml(url) {
+  async fetchResponse(url) {
     try {
-      const response = await fetch(url, {
+      return await fetch(url, {
         headers: { "X-Requested-With": "XMLHttpRequest" }
       })
-      if (!response.ok) return null
-      return response.text()
     } catch {
       return null
     }
@@ -106,13 +91,11 @@ export default class extends Controller {
     const rows = [...this.listTarget.querySelectorAll("[data-event-id]")]
     if (!rows.length) return
 
-    const byId = rows.map(r => parseInt(r.dataset.eventId, 10))
-    this.newestIdValue = Math.max(...byId)
-    this.oldestIdValue = Math.min(...byId)
+    const ids = rows.map(r => parseInt(r.dataset.eventId, 10))
+    this.newestIdValue = Math.max(...ids)
+    this.oldestIdValue = Math.min(...ids)
 
-    const newestRow = rows.find(r => parseInt(r.dataset.eventId, 10) === this.newestIdValue)
     const oldestRow = rows.find(r => parseInt(r.dataset.eventId, 10) === this.oldestIdValue)
-    if (newestRow) this.newestDateValue = newestRow.dataset.eventDate
     if (oldestRow) this.oldestDateValue = oldestRow.dataset.eventDate
   }
 }
