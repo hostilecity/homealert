@@ -28,6 +28,12 @@ export default class extends Controller {
       return
     }
 
+    // Always unsubscribe any existing browser-side subscription first.
+    // This forces Chrome to generate a fresh modern FCM endpoint rather
+    // than reusing a stale legacy one (fcm/send/ format, deprecated June 2024).
+    const existing = await registration.pushManager.getSubscription()
+    if (existing) await existing.unsubscribe()
+
     let subscription
     try {
       subscription = await registration.pushManager.subscribe({
@@ -59,7 +65,8 @@ export default class extends Controller {
     if (response.ok || response.status === 201) {
       window.location.reload()
     } else {
-      this.setStatus("Failed to save subscription. Please try again.")
+      const body = await response.json().catch(() => ({}))
+      this.setStatus(body.error || "Failed to save subscription. Please try again.")
     }
   }
 

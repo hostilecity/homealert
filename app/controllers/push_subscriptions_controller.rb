@@ -1,8 +1,15 @@
 class PushSubscriptionsController < ApplicationController
+  LEGACY_FCM_ENDPOINT = "https://fcm.googleapis.com/fcm/send/"
+
   def create
-    subscription = current_user.push_subscriptions.find_or_initialize_by(
-      endpoint: subscription_params[:endpoint]
-    )
+    endpoint = subscription_params[:endpoint]
+
+    if endpoint.start_with?(LEGACY_FCM_ENDPOINT)
+      return render json: { error: "Legacy FCM endpoint rejected — please clear site data in your browser and subscribe again." },
+                    status: :unprocessable_entity
+    end
+
+    subscription = current_user.push_subscriptions.find_or_initialize_by(endpoint: endpoint)
     subscription.assign_attributes(
       p256dh_key:   subscription_params[:p256dh_key],
       auth_key:     subscription_params[:auth_key],
