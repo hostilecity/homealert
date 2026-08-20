@@ -106,7 +106,8 @@
 
   <!-- This Device -->
   <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
-       data-controller="push">
+       data-controller="push"
+       data-push-subscription-id-value="<%= @push_subscription&.id.to_i %>">
     <div class="px-5 py-4 border-b border-gray-800">
       <h3 class="text-sm font-semibold">This Device</h3>
       <p class="mt-0.5 text-xs text-gray-500">Manage push notification subscription for this browser/device.</p>
@@ -114,9 +115,7 @@
 
     <% if @push_subscription %>
       <!-- Subscribed state -->
-      <div class="px-5 py-5 flex items-center justify-between"
-           data-push-device
-           data-push-subscription-id-value="<%= @push_subscription.id %>">
+      <div class="px-5 py-5 flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-white">
             <%= @push_subscription.device_label.presence || "This browser" %>

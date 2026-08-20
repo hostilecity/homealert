@@ -4,20 +4,29 @@ export default class extends Controller {
   static targets = ["subscribeBtn", "unsubscribeBtn", "status"]
   static values  = { subscriptionId: Number }
 
-  async connect() {
+  connect() {
     if (!this.supported()) {
       this.setStatus("Push notifications are not supported in this browser.")
-      return
+      if (this.hasSubscribeBtnTarget) this.subscribeBtnTarget.disabled = true
     }
-    await this.syncUI()
   }
 
   // ── Public actions ────────────────────────────────────────────────────────
 
   async subscribe() {
-    const registration = await navigator.serviceWorker.ready
     const vapidKey = document.querySelector("meta[name='vapid-public-key']")?.content
-    if (!vapidKey) return
+    if (!vapidKey) {
+      this.setStatus("Configuration error — please contact the administrator.")
+      return
+    }
+
+    let registration
+    try {
+      registration = await navigator.serviceWorker.ready
+    } catch (err) {
+      this.setStatus("Service worker not available. Try reloading the page.")
+      return
+    }
 
     let subscription
     try {
@@ -31,28 +40,23 @@ export default class extends Controller {
       return
     }
 
-    const keys    = subscription.toJSON().keys || {}
-    const label   = this.deviceLabel()
+    const keys      = subscription.toJSON().keys || {}
     const csrfToken = document.querySelector("meta[name='csrf-token']")?.content
 
     const response = await fetch("/push_subscriptions", {
       method:  "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrfToken
-      },
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
       body: JSON.stringify({
         subscription: {
-          endpoint:    subscription.endpoint,
-          p256dh_key:  keys.p256dh,
-          auth_key:    keys.auth,
-          device_label: label
+          endpoint:     subscription.endpoint,
+          p256dh_key:   keys.p256dh,
+          auth_key:     keys.auth,
+          device_label: this.deviceLabel()
         }
       })
     })
 
     if (response.ok || response.status === 201) {
-      // Reload to let the server render the updated Settings section
       window.location.reload()
     } else {
       this.setStatus("Failed to save subscription. Please try again.")
@@ -70,10 +74,18 @@ export default class extends Controller {
     })
 
     if (response.ok) {
-      // Also unsubscribe the browser-side PushSubscription
-      const registration = await navigator.serviceWorker.ready
-      const sub = await registration.pushManager.getSubscription()
-      await sub?.unsubscribe()
+      // Best-effort: also unsubscribe the browser-side PushSubscription if
+      // one exists. This may be absent if the service worker was unregistered.
+      try {
+        const reg = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 2000))
+        ])
+        const sub = await reg.pushManager.getSubscription()
+        await sub?.unsubscribe()
+      } catch {
+        // Service worker unavailable or timed out — server record already deleted, proceed
+      }
       window.location.reload()
     }
   }
@@ -84,20 +96,10 @@ export default class extends Controller {
     return "serviceWorker" in navigator && "PushManager" in window
   }
 
-  async syncUI() {
-    const registration = await navigator.serviceWorker.ready
-    const sub = await registration.pushManager.getSubscription()
-    // UI state is handled server-side; this is a no-op for now but can
-    // be used to sync the browser subscription state if needed.
-    if (!sub && this.hasUnsubscribeBtnTarget) {
-      this.unsubscribeBtnTarget.closest("[data-push-device]")?.remove()
-    }
-  }
-
   deviceLabel() {
     const ua = navigator.userAgent
     let browser = "Browser"
-    let os = "Unknown OS"
+    let os      = "Unknown OS"
 
     if (/Chrome/.test(ua) && !/Edg|OPR/.test(ua)) browser = "Chrome"
     else if (/Safari/.test(ua) && !/Chrome/.test(ua)) browser = "Safari"
@@ -116,7 +118,6 @@ export default class extends Controller {
     if (this.hasStatusTarget) this.statusTarget.textContent = message
   }
 
-  // Converts a URL-safe base64 VAPID public key to a Uint8Array
   urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
     const base64  = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/")
