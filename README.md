@@ -72,6 +72,35 @@ ALLOWED_EMAILS=alice@example.com,bob@example.com
 - Accounts not on the list will be redirected back to the login screen with an error.
 - To add or remove access, update `ALLOWED_EMAILS` and restart the server.
 
+### Web Push / VAPID keys
+
+HomeAlert uses the Web Push protocol (VAPID) to deliver push notifications to subscribed devices.
+
+| Variable | Description |
+|---|---|
+| `VAPID_PUBLIC_KEY` | VAPID public key (URL-safe base64) |
+| `VAPID_PRIVATE_KEY` | VAPID private key (URL-safe base64) |
+
+**Generate a key pair:**
+
+```bash
+bundle exec rails runner "puts WebPush.generate_key_pair.inspect"
+```
+
+Copy the output values into your `.env`:
+
+```bash
+VAPID_PUBLIC_KEY=generated-public-key
+VAPID_PRIVATE_KEY=generated-private-key
+```
+
+- Keys must remain stable — changing them invalidates all existing push subscriptions.
+- Keep `VAPID_PRIVATE_KEY` secret.
+
+### Push notifications on iOS
+
+iOS requires the app to be installed as a PWA (Add to Home Screen) before push notifications are delivered. Safari 16.4+ on iOS supports Web Push for installed PWAs.
+
 ## Webhooks
 
 ### ReoLink doorbell (`POST /webhooks/reolink`)

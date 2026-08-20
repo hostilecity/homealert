@@ -17,6 +17,13 @@ Rails.application.routes.draw do
   # Events feed (AJAX, authenticated)
   get "events/feed", to: "events#feed", as: :events_feed
 
+  # Push subscriptions
+  resources :push_subscriptions, only: %i[create destroy]
+
+  # Settings
+  get   "settings",                             to: "settings#index",                        as: :settings
+  patch "settings/notification_preferences",    to: "settings#update_notification_preferences", as: :settings_notification_preferences
+
   # Public pages
   get "privacy", to: "pages#privacy", as: :privacy
 

@@ -4,11 +4,15 @@
     <title><%= content_for(:title) || "HomeAlert" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="HomeAlert">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="vapid-public-key" content="<%= ENV.fetch('VAPID_PUBLIC_KEY', '') %>">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <%= javascript_importmap_tags %>
   </head>

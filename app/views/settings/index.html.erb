@@ -1,0 +1,152 @@
+<% content_for :title, "Settings — HomeAlert" %>
+
+<div class="space-y-8">
+
+  <!-- Page heading -->
+  <div>
+    <h2 class="text-xl font-semibold">Settings</h2>
+    <p class="mt-1 text-sm text-gray-400">Manage your notification preferences and account details.</p>
+  </div>
+
+  <!-- Account -->
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-800">
+      <h3 class="text-sm font-semibold">Account</h3>
+    </div>
+    <div class="px-5 py-5 flex items-center gap-4">
+      <% if current_user.avatar_url.present? %>
+        <img src="<%= current_user.avatar_url %>"
+             class="w-14 h-14 rounded-full flex-shrink-0" alt="<%= current_user.name %>" />
+      <% else %>
+        <div class="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-lg font-bold text-white flex-shrink-0">
+          <%= current_user.name.split.map(&:first).first(2).join.upcase %>
+        </div>
+      <% end %>
+      <div>
+        <p class="font-medium text-white"><%= current_user.name %></p>
+        <p class="text-sm text-gray-400"><%= current_user.email %></p>
+        <span class="inline-flex items-center mt-1 gap-1.5 px-2 py-0.5 rounded-full text-xs bg-green-900/40 text-green-400 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
+          Google account connected
+        </span>
+      </div>
+      <div class="ml-auto">
+        <%= button_to "Sign out", logout_path, method: :post,
+              data: { turbo: false },
+              class: "text-sm text-red-400 hover:text-red-300 transition font-medium" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Push Notifications toggles -->
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-800">
+      <h3 class="text-sm font-semibold">Push Notifications</h3>
+      <p class="mt-0.5 text-xs text-gray-500">Choose which events trigger a push notification on your devices.</p>
+    </div>
+    <div class="divide-y divide-gray-800">
+
+      <!-- Doorbell pressed -->
+      <div class="flex items-center justify-between px-5 py-4"
+           data-controller="toggle"
+           data-toggle-url-value="<%= settings_notification_preferences_path %>"
+           data-toggle-field-value="doorbell_pressed"
+           data-toggle-checked-value="<%= @notification_preference.doorbell_pressed %>">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-indigo-600/20 flex items-center justify-center">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-white">Doorbell pressed</p>
+            <p class="text-xs text-gray-500">Notify when someone presses the doorbell</p>
+          </div>
+        </div>
+        <button type="button"
+                role="switch"
+                aria-checked="<%= @notification_preference.doorbell_pressed %>"
+                data-toggle-target="button"
+                data-action="click->toggle#toggle"
+                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 <%= @notification_preference.doorbell_pressed? ? 'bg-indigo-600' : 'bg-gray-700' %>">
+          <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out <%= @notification_preference.doorbell_pressed? ? 'translate-x-5' : 'translate-x-0' %>"></span>
+        </button>
+      </div>
+
+      <!-- Motion detected -->
+      <div class="flex items-center justify-between px-5 py-4"
+           data-controller="toggle"
+           data-toggle-url-value="<%= settings_notification_preferences_path %>"
+           data-toggle-field-value="motion_detected"
+           data-toggle-checked-value="<%= @notification_preference.motion_detected %>">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-600/20 flex items-center justify-center">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5 6.75 14.25 10.5l5.25-5.25M3.75 13.5H9m-5.25 0V7.5" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-white">Motion detected</p>
+            <p class="text-xs text-gray-500">Notify when motion is detected near a camera</p>
+          </div>
+        </div>
+        <button type="button"
+                role="switch"
+                aria-checked="<%= @notification_preference.motion_detected %>"
+                data-toggle-target="button"
+                data-action="click->toggle#toggle"
+                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 <%= @notification_preference.motion_detected? ? 'bg-indigo-600' : 'bg-gray-700' %>">
+          <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out <%= @notification_preference.motion_detected? ? 'translate-x-5' : 'translate-x-0' %>"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- This Device -->
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
+       data-controller="push">
+    <div class="px-5 py-4 border-b border-gray-800">
+      <h3 class="text-sm font-semibold">This Device</h3>
+      <p class="mt-0.5 text-xs text-gray-500">Manage push notification subscription for this browser/device.</p>
+    </div>
+
+    <% if @push_subscription %>
+      <!-- Subscribed state -->
+      <div class="px-5 py-5 flex items-center justify-between"
+           data-push-device
+           data-push-subscription-id-value="<%= @push_subscription.id %>">
+        <div>
+          <p class="text-sm font-medium text-white">
+            <%= @push_subscription.device_label.presence || "This browser" %>
+          </p>
+          <p class="text-xs text-gray-500 mt-0.5">
+            Registered <%= time_ago_in_words(@push_subscription.created_at) %> ago
+          </p>
+        </div>
+        <button data-action="click->push#unsubscribe"
+                data-push-target="unsubscribeBtn"
+                class="text-sm font-medium px-3 py-1.5 rounded-lg border border-red-800 text-red-400 hover:bg-red-900/30 transition">
+          Unsubscribe
+        </button>
+      </div>
+    <% else %>
+      <!-- Not subscribed state -->
+      <div class="px-5 py-5 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-white">Push notifications</p>
+          <p class="text-xs text-gray-500 mt-0.5" data-push-target="status">
+            Not enabled for this device.
+          </p>
+        </div>
+        <button data-action="click->push#subscribe"
+                data-push-target="subscribeBtn"
+                class="text-sm font-medium px-3 py-1.5 rounded-lg border border-indigo-700 text-indigo-400 hover:bg-indigo-900/30 transition">
+          Enable notifications
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+</div>
