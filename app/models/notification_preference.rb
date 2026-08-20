@@ -5,7 +5,9 @@ class NotificationPreference < ApplicationRecord
   validates :motion_detected,  inclusion: { in: [ true, false ] }
 
   def self.for_user(user)
-    find_or_create_by!(user: user)
+    # create_or_find_by! inserts first then falls back to SELECT on unique conflict,
+    # making it safe under concurrent access (e.g. simultaneous webhook jobs).
+    create_or_find_by!(user: user)
   end
 
   def enabled_for?(event_type)

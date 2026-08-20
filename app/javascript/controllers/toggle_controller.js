@@ -2,8 +2,8 @@ import { Controller } from "@hotwired/stimulus"
 
 // Persists a boolean preference toggle immediately on click.
 // Expects:
-//   data-toggle-url-value   — PATCH endpoint
-//   data-toggle-field-value — param name (e.g. "doorbell_pressed")
+//   data-toggle-url-value     — PATCH endpoint
+//   data-toggle-field-value   — param name (e.g. "doorbell_pressed")
 //   data-toggle-checked-value — current state (true/false)
 export default class extends Controller {
   static targets = ["button"]
@@ -14,6 +14,11 @@ export default class extends Controller {
   }
 
   async toggle() {
+    if (this.pending) return  // ignore concurrent clicks
+    this.pending = true
+
+    if (this.hasButtonTarget) this.buttonTarget.disabled = true
+
     const newValue  = !this.checkedValue
     const csrfToken = document.querySelector("meta[name='csrf-token']")?.content
 
@@ -21,19 +26,24 @@ export default class extends Controller {
     this.checkedValue = newValue
     this.updateButtonAppearance(newValue)
 
-    const response = await fetch(this.urlValue, {
-      method:  "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrfToken
-      },
-      body: JSON.stringify({ preference: { [this.fieldValue]: newValue } })
-    })
+    try {
+      const response = await fetch(this.urlValue, {
+        method:  "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
+        body: JSON.stringify({ preference: { [this.fieldValue]: newValue } })
+      })
 
-    if (!response.ok) {
-      // Revert on failure
-      this.checkedValue = !newValue
-      this.updateButtonAppearance(!newValue)
+      if (!response.ok) {
+        // Revert on failure
+        this.checkedValue = !newValue
+        this.updateButtonAppearance(!newValue)
+      }
+    } finally {
+      this.pending = false
+      if (this.hasButtonTarget) this.buttonTarget.disabled = false
     }
   }
 
