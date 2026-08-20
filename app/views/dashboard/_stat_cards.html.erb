@@ -1,0 +1,41 @@
+<%
+  today          = Event.today
+  events_count   = today.count
+  doorbell_count = today.doorbell_pressed.count
+  motion_count   = today.motion_detected.count
+  last_doorbell  = today.doorbell_pressed.recent.first
+  last_motion    = today.motion_detected.recent.first
+%>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="stat-cards">
+
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Events today</p>
+    <p class="mt-2 text-3xl font-bold"><%= events_count %></p>
+    <p class="mt-1 text-xs text-gray-500">Across all devices</p>
+  </div>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Doorbell presses</p>
+    <p class="mt-2 text-3xl font-bold text-indigo-400"><%= doorbell_count %></p>
+    <p class="mt-1 text-xs text-gray-500">
+      <% if last_doorbell %>
+        Last: <%= time_ago_in_words(last_doorbell.occurred_at) %> ago
+      <% else %>
+        No events today
+      <% end %>
+    </p>
+  </div>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+    <p class="text-xs text-gray-500 uppercase tracking-wider">Motion events</p>
+    <p class="mt-2 text-3xl font-bold text-amber-400"><%= motion_count %></p>
+    <p class="mt-1 text-xs text-gray-500">
+      <% if last_motion %>
+        Last: <%= time_ago_in_words(last_motion.occurred_at) %> ago
+      <% else %>
+        No events today
+      <% end %>
+    </p>
+  </div>
+
+</div>
