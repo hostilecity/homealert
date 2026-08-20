@@ -47,6 +47,7 @@
   <%
     newest_event = @recent_events_by_date.values.first&.first
     oldest_event = @recent_events_by_date.values.last&.last
+    newest_date  = newest_event&.occurred_at&.in_time_zone&.to_date
     oldest_date  = oldest_event&.occurred_at&.in_time_zone&.to_date
     has_more     = @recent_events_by_date.values.sum(&:length) == 10
   %>
@@ -55,6 +56,7 @@
        data-feed-url-value="<%= events_feed_path %>"
        data-feed-newest-id-value="<%= newest_event&.id.to_i %>"
        data-feed-oldest-id-value="<%= oldest_event&.id.to_i %>"
+       data-feed-newest-date-value="<%= newest_date %>"
        data-feed-oldest-date-value="<%= oldest_date %>">
 
     <% if @recent_events_by_date.any? %>

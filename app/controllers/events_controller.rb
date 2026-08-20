@@ -3,10 +3,11 @@ class EventsController < ApplicationController
 
   def feed
     if params[:after_id].present?
-      # Polling: events newer than after_id, oldest-first so we can prepend in order
-      events = Event.where("id > ?", params[:after_id]).recent.limit(FEED_LIMIT)
+      # Polling: events newer than after_id, oldest-first so prepending puts newest at top
+      events     = Event.where("id > ?", params[:after_id]).order(occurred_at: :asc).limit(FEED_LIMIT)
+      first_date = params[:first_date].present? ? Date.parse(params[:first_date]) : nil
       render partial: "dashboard/feed_rows",
-             locals: { events: events, context: :prepend, last_date: nil }
+             locals: { events: events, context: :prepend, last_date: first_date }
     elsif params[:before_id].present?
       # View more: events older than before_id, newest-first
       events = Event.where("id < ?", params[:before_id]).recent.limit(FEED_LIMIT)

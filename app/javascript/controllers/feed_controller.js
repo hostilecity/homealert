@@ -5,10 +5,11 @@ const POLL_INTERVAL_MS = 12000 // 12 seconds
 export default class extends Controller {
   static targets = ["list", "footer", "empty"]
   static values  = {
-    url:       String,
-    newestId:  Number,
-    oldestId:  Number,
-    oldestDate: String
+    url:        String,
+    newestId:   Number,
+    oldestId:   Number,
+    oldestDate: String,
+    newestDate: String
   }
 
   connect() {
@@ -24,42 +25,36 @@ export default class extends Controller {
 
   async poll() {
     if (this.newestIdValue === 0) {
-      // No events rendered yet — check for first events
       await this.pollEmpty()
       return
     }
 
-    const url = `${this.urlValue}?after_id=${this.newestIdValue}`
+    // Pass first_date so the server can suppress the leading divider if the
+    // newest returned group shares a date with the current top of the feed.
+    const url = `${this.urlValue}?after_id=${this.newestIdValue}&first_date=${this.newestDateValue}`
     const html = await this.fetchHtml(url)
-    if (!html) return
+    if (!html || !html.trim()) return
 
     const fragment = this.parseFragment(html)
     if (!fragment.children.length) return
 
-    // Prepend new rows above the existing list
+    // Server returns events oldest-first; prepending puts newest at the top.
     this.listTarget.prepend(...fragment.childNodes)
 
-    // Update newestId to the first event id in the prepended chunk
-    const firstRow = this.listTarget.querySelector("[data-event-id]")
-    if (firstRow) this.newestIdValue = parseInt(firstRow.dataset.eventId, 10)
-
-    // Hide the empty state if it was showing
     if (this.hasEmptyTarget) this.emptyTarget.remove()
+    this.updateCursors()
   }
 
   async pollEmpty() {
-    // When there are no events yet, poll for the very first one
     const url = `${this.urlValue}?after_id=0`
     const html = await this.fetchHtml(url)
-    if (!html) return
+    if (!html || !html.trim()) return
 
     const fragment = this.parseFragment(html)
     if (!fragment.children.length) return
 
     this.listTarget.append(...fragment.childNodes)
     if (this.hasEmptyTarget) this.emptyTarget.remove()
-
-    // Track newest and oldest from this initial batch
     this.updateCursors()
   }
 
@@ -74,19 +69,15 @@ export default class extends Controller {
 
     const fragment = this.parseFragment(html)
 
-    // The fragment contains rows + a replacement footer from the server
+    // Replace the footer in-place with the server-rendered one
     const newFooter = fragment.querySelector("#view-more-footer")
     if (newFooter && this.hasFooterTarget) {
       this.footerTarget.replaceWith(newFooter)
     }
 
-    // Insert all non-footer nodes before the footer
-    const rows = [...fragment.childNodes].filter(
-      n => !(n.id === "view-more-footer")
-    )
-    if (this.hasFooterTarget) {
-      rows.forEach(n => this.listTarget.appendChild(n))
-    }
+    // Append event rows to the list (before the footer)
+    const rows = [...fragment.childNodes].filter(n => n.id !== "view-more-footer")
+    rows.forEach(n => this.listTarget.appendChild(n))
 
     this.updateCursors()
   }
@@ -112,16 +103,16 @@ export default class extends Controller {
   }
 
   updateCursors() {
-    const rows = this.listTarget.querySelectorAll("[data-event-id]")
+    const rows = [...this.listTarget.querySelectorAll("[data-event-id]")]
     if (!rows.length) return
 
-    const ids = [...rows].map(r => parseInt(r.dataset.eventId, 10))
-    this.newestIdValue = Math.max(...ids)
-    this.oldestIdValue = Math.min(...ids)
+    const byId = rows.map(r => parseInt(r.dataset.eventId, 10))
+    this.newestIdValue = Math.max(...byId)
+    this.oldestIdValue = Math.min(...byId)
 
-    const oldestRow = [...rows].find(
-      r => parseInt(r.dataset.eventId, 10) === this.oldestIdValue
-    )
+    const newestRow = rows.find(r => parseInt(r.dataset.eventId, 10) === this.newestIdValue)
+    const oldestRow = rows.find(r => parseInt(r.dataset.eventId, 10) === this.oldestIdValue)
+    if (newestRow) this.newestDateValue = newestRow.dataset.eventDate
     if (oldestRow) this.oldestDateValue = oldestRow.dataset.eventDate
   }
 }
