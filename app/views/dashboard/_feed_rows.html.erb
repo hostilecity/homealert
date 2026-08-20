@@ -26,7 +26,8 @@
   <%= render partial: "dashboard/event_row", collection: group_events, as: :event %>
 <% end %>
 
-<% if context == :append %>
+<%# Emit the footer for both :poll (replace in place) and :append (insert after rows) %>
+<% if context == :poll || context == :append %>
   <div id="view-more-footer"
        class="px-5 py-3 border-t border-gray-800 text-center"
        data-feed-target="footer">

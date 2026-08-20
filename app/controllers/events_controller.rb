@@ -14,10 +14,13 @@ class EventsController < ApplicationController
       render partial: "dashboard/feed_rows",
              locals: { events: events, context: :poll, has_more: has_more }
 
-    elsif params[:before_id].present?
-      # View more: append next page of older events
-      events    = Event.where("id < ?", params[:before_id]).recent.limit(FEED_LIMIT)
-      last_date = params[:last_date].present? ? Date.parse(params[:last_date]) : nil
+    elsif params[:before_occurred_at].present?
+      # View more: append next page of events older than the given occurred_at.
+      # Cursor is occurred_at (not id) to stay consistent with the occurred_at
+      # ordering used by Event.recent, avoiding skips/duplicates on clock skew.
+      cursor    = Time.zone.parse(params[:before_occurred_at])
+      last_date = safe_parse_date(params[:last_date])
+      events    = Event.where("occurred_at < ?", cursor).recent.limit(FEED_LIMIT)
       has_more  = events.size == FEED_LIMIT
       render partial: "dashboard/feed_rows",
              locals: { events: events, context: :append, last_date: last_date, has_more: has_more }
@@ -25,5 +28,15 @@ class EventsController < ApplicationController
     else
       head :bad_request
     end
+  rescue ArgumentError
+    head :bad_request
+  end
+
+  private
+
+  def safe_parse_date(value)
+    Date.parse(value) if value.present?
+  rescue ArgumentError
+    nil
   end
 end

@@ -45,17 +45,15 @@
 
   <!-- Recent events feed -->
   <%
-    newest_event = @recent_events_by_date.values.first&.first
-    oldest_event = @recent_events_by_date.values.last&.last
-    oldest_date  = oldest_event&.occurred_at&.in_time_zone&.to_date
-    has_more     = @recent_events_by_date.values.sum(&:length) == 10
+    newest_event       = @recent_events_by_date.values.first&.first
+    oldest_event       = @recent_events_by_date.values.last&.last
+    has_more           = @recent_events_by_date.values.sum(&:length) == 10
   %>
   <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
        data-controller="feed"
        data-feed-url-value="<%= events_feed_path %>"
        data-feed-newest-id-value="<%= newest_event&.id.to_i %>"
-       data-feed-oldest-id-value="<%= oldest_event&.id.to_i %>"
-       data-feed-oldest-date-value="<%= oldest_date %>">
+       data-feed-oldest-occurred-at-value="<%= oldest_event&.occurred_at&.iso8601 %>">
 
     <% if @recent_events_by_date.any? %>
 
@@ -84,6 +82,10 @@
       <div class="px-5 py-12 text-center" data-feed-target="empty">
         <p class="text-sm text-gray-500">No events yet. Events will appear here once your devices are connected.</p>
       </div>
+      <!-- Footer target always present so polling can insert View more after first events arrive -->
+      <div id="view-more-footer"
+           class="hidden"
+           data-feed-target="footer"></div>
     <% end %>
 
   </div>
