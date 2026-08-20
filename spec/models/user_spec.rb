@@ -93,7 +93,7 @@ RSpec.describe User, type: :model do
     context "when ALLOWED_EMAILS contains a single email" do
       it "returns an array with that email downcased" do
         stub_const("ENV", ENV.to_h.merge("ALLOWED_EMAILS" => "Admin@Example.com"))
-        expect(described_class.allowlist).to eq(["admin@example.com"])
+        expect(described_class.allowlist).to eq([ "admin@example.com" ])
       end
     end
 

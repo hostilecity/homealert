@@ -83,7 +83,7 @@ RSpec.describe Event, type: :model do
         newer  = create(:event, occurred_at: 1.hour.ago)
         newest = create(:event, occurred_at: Time.current)
 
-        expect(described_class.recent.to_a).to eq([newest, newer, older])
+        expect(described_class.recent.to_a).to eq([ newest, newer, older ])
       end
     end
 
