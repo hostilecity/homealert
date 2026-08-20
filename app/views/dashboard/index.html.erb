@@ -1,47 +1,17 @@
 <% content_for :title, "Dashboard — HomeAlert" %>
 
-<div class="space-y-8">
+<div class="space-y-8" data-controller="dashboard">
 
-  <!-- Stat cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-      <p class="text-xs text-gray-500 uppercase tracking-wider">Events today</p>
-      <p class="mt-2 text-3xl font-bold"><%= @events_today_count %></p>
-      <p class="mt-1 text-xs text-gray-500">Across all devices</p>
-    </div>
-
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-      <p class="text-xs text-gray-500 uppercase tracking-wider">Doorbell presses</p>
-      <p class="mt-2 text-3xl font-bold text-indigo-400"><%= @doorbell_count %></p>
-      <p class="mt-1 text-xs text-gray-500">
-        <% if @last_doorbell %>
-          Last: <%= time_ago_in_words(@last_doorbell.occurred_at) %> ago
-        <% else %>
-          No events today
-        <% end %>
-      </p>
-    </div>
-
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-      <p class="text-xs text-gray-500 uppercase tracking-wider">Motion events</p>
-      <p class="mt-2 text-3xl font-bold text-amber-400"><%= @motion_count %></p>
-      <p class="mt-1 text-xs text-gray-500">
-        <% if @last_motion %>
-          Last: <%= time_ago_in_words(@last_motion.occurred_at) %> ago
-        <% else %>
-          No events today
-        <% end %>
-      </p>
-    </div>
-
+  <!-- Stat cards — wrapped so the poll can replace them in place -->
+  <div data-dashboard-target="statCards">
+    <%= render "stat_cards" %>
   </div>
 
   <!-- Recent events feed -->
   <%
-    newest_event       = @recent_events_by_date.values.first&.first
-    oldest_event       = @recent_events_by_date.values.last&.last
-    has_more           = @recent_events_by_date.values.sum(&:length) == 10
+    newest_event = @recent_events_by_date.values.first&.first
+    oldest_event = @recent_events_by_date.values.last&.last
+    has_more     = @recent_events_by_date.values.sum(&:length) == 10
   %>
   <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
        data-controller="feed"
@@ -51,7 +21,6 @@
 
     <% if @recent_events_by_date.any? %>
 
-      <!-- Prepend target: new events are injected here -->
       <div data-feed-target="list">
         <%= render "feed_rows",
                    events: @recent_events_by_date.values.flatten,
@@ -59,7 +28,6 @@
                    last_date: nil %>
       </div>
 
-      <!-- View more footer -->
       <div id="view-more-footer"
            class="px-5 py-3 border-t border-gray-800 text-center"
            data-feed-target="footer">
@@ -76,10 +44,7 @@
       <div class="px-5 py-12 text-center" data-feed-target="empty">
         <p class="text-sm text-gray-500">No events yet. Events will appear here once your devices are connected.</p>
       </div>
-      <!-- Footer target always present so polling can insert View more after first events arrive -->
-      <div id="view-more-footer"
-           class="hidden"
-           data-feed-target="footer"></div>
+      <div id="view-more-footer" class="hidden" data-feed-target="footer"></div>
     <% end %>
 
   </div>

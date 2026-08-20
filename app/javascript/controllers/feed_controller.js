@@ -34,19 +34,34 @@ export default class extends Controller {
 
     const fragment = this.parseFragment(html)
 
-    // Pull the footer out of the fragment and replace the footer target
-    const newFooter = fragment.querySelector("#view-more-footer")
+    // Extract stat cards from poll response and dispatch to dashboard_controller
+    const statCards = fragment.querySelector("#poll-stat-cards")
+
+    // Extract the feed rows wrapper (poll_response partial wraps them)
+    const feedRowsWrapper = fragment.querySelector("#poll-feed-rows")
+    const feedFragment    = feedRowsWrapper
+      ? this.parseFragment(feedRowsWrapper.innerHTML)
+      : fragment
+
+    // Pull the footer out and replace the footer target
+    const newFooter = feedFragment.querySelector("#view-more-footer")
     if (newFooter && this.hasFooterTarget) {
       this.footerTarget.replaceWith(newFooter)
     }
 
-    // Remaining element nodes are the event rows + dividers
-    const rows = elementNodes(fragment)
+    // Replace feed list with fresh rows
+    const rows = elementNodes(feedFragment)
     this.listTarget.innerHTML = ""
     rows.forEach(n => this.listTarget.appendChild(n))
 
     if (this.hasEmptyTarget) this.emptyTarget.remove()
     this.updateCursors()
+
+    // Notify dashboard_controller to swap stat cards
+    this.element.dispatchEvent(new CustomEvent("feed:updated", {
+      bubbles: true,
+      detail:  { statCards }
+    }))
   }
 
   // ── View more: append next page of older events ───────────────────────────

@@ -11,8 +11,8 @@ class EventsController < ApplicationController
 
       events   = Event.recent.limit(FEED_LIMIT)
       has_more = events.size == FEED_LIMIT
-      render partial: "dashboard/feed_rows",
-             locals: { events: events, context: :poll, has_more: has_more }
+      render partial: "dashboard/poll_response",
+             locals: { events: events, has_more: has_more }
 
     elsif params[:before_occurred_at].present?
       # View more: append next page of events older than the given occurred_at.
