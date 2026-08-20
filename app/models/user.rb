@@ -1,4 +1,7 @@
 class User < ApplicationRecord
+  has_many :push_subscriptions, dependent: :destroy
+  has_one  :notification_preference, dependent: :destroy
+
   validates :google_uid, presence: true, uniqueness: true
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true

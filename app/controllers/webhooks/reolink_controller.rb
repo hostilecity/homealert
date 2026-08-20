@@ -5,7 +5,8 @@ module Webhooks
 
     def create
       attributes = Webhooks::ReoLinkParser.new(payload).parse
-      Event.create!(attributes)
+      event = Event.create!(attributes)
+      PushNotificationJob.perform_later(event.id)
       head :ok
     rescue Webhooks::UnknownEventError => e
       Rails.logger.warn("ReoLink webhook ignored: #{e.message}")
