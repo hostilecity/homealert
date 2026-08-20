@@ -84,10 +84,10 @@ HomeAlert uses the Web Push protocol (VAPID) to deliver push notifications to su
 **Generate a key pair:**
 
 ```bash
-bundle exec rails runner "puts WebPush.generate_key_pair.inspect"
+bundle exec rails runner "key = WebPush.generate_key; puts \"VAPID_PUBLIC_KEY=#{key.public_key}\"; puts \"VAPID_PRIVATE_KEY=#{key.private_key}\""
 ```
 
-Copy the output values into your `.env`:
+Copy the two output lines directly into your `.env`:
 
 ```bash
 VAPID_PUBLIC_KEY=generated-public-key
