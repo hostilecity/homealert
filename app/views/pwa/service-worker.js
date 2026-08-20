@@ -10,44 +10,32 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("push", (event) => {
-  console.log("[SW] push event received", event)
-  console.log("[SW] event.data:", event.data)
+  let title = "HomeAlert"
+  let body  = "New event received"
+  let path  = "/"
 
-  if (!event.data) {
-    console.warn("[SW] push event has no data — showing fallback notification")
-    event.waitUntil(
-      self.registration.showNotification("HomeAlert", {
-        body: "New event received",
-        icon: "/icon.png"
-      })
-    )
-    return
-  }
-
-  let data
   try {
-    data = event.data.json()
-    console.log("[SW] parsed push data:", data)
+    const data = event.data ? event.data.json() : {}
+    title = data.title || title
+    body  = data.body  || body
+    path  = data.path  || path
   } catch (e) {
-    console.error("[SW] failed to parse push data as JSON:", e)
-    console.log("[SW] raw text:", event.data.text())
-    event.waitUntil(
-      self.registration.showNotification("HomeAlert", {
-        body: "New event received",
-        icon: "/icon.png"
-      })
-    )
-    return
+    // fall through with defaults
   }
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body:  data.body,
-      icon:  "/icon.png",
-      badge: "/icon.png",
-      data:  { path: data.path || "/" }
-    })
-  )
+  const promise = self.registration.showNotification(title, {
+    body:    body,
+    icon:    "/icon.png",
+    badge:   "/icon.png",
+    data:    { path: path },
+    requireInteraction: false
+  }).then(() => {
+    console.log("[SW] showNotification resolved OK")
+  }).catch((err) => {
+    console.error("[SW] showNotification FAILED:", err)
+  })
+
+  event.waitUntil(promise)
 })
 
 self.addEventListener("notificationclick", (event) => {
