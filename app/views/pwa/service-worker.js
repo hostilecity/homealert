@@ -1,6 +1,16 @@
 // HomeAlert Service Worker
 // Handles Web Push delivery and notification click-through.
 
+// Take control immediately on install without waiting for existing tabs to close.
+self.addEventListener("install", (event) => {
+  self.skipWaiting()
+})
+
+// Claim all open clients so this service worker is active right away.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
 self.addEventListener("push", (event) => {
   if (!event.data) return
 
@@ -23,13 +33,11 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      // Focus an existing window if one is already open
       for (const client of clientList) {
         if (new URL(client.url).pathname === path && "focus" in client) {
           return client.focus()
         }
       }
-      // Otherwise open a new window
       if (clients.openWindow) {
         return clients.openWindow(path)
       }
