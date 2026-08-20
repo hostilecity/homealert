@@ -45,20 +45,8 @@ export default class extends Controller {
       return
     }
 
-    // Detect legacy FCM endpoints before posting to the server.
-    // These use the deprecated fcm/send/ format (shut down June 2024) and
-    // will never deliver. They appear when Chrome reuses an old GCM sender
-    // ID from a previous service worker registration. The only fix is to
-    // clear all site data so Chrome re-registers the service worker fresh.
-    if (subscription.endpoint.includes("fcm.googleapis.com/fcm/send/")) {
-      await subscription.unsubscribe()
-      this.setStatus(
-        "Your browser has a stale push registration. To fix: go to " +
-        "chrome://settings/content/notifications, remove this site, then " +
-        "go to DevTools → Application → Storage → Clear site data, reload, and try again."
-      )
-      return
-    }
+    // Log the endpoint so we can see what Chrome generated
+    console.log("Push subscription endpoint:", subscription.endpoint)
 
     const keys      = subscription.toJSON().keys || {}
     const csrfToken = document.querySelector("meta[name='csrf-token']")?.content
