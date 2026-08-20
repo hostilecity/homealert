@@ -8,34 +8,63 @@
     <p class="mt-1 text-sm text-gray-400">Recent activity from your home security devices.</p>
   </div>
 
-  <!-- Placeholder stat cards (populated by issue #6) -->
+  <!-- Stat cards -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+    <!-- Events today -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
       <p class="text-xs text-gray-500 uppercase tracking-wider">Events today</p>
-      <p class="mt-2 text-3xl font-bold text-gray-600">—</p>
+      <p class="mt-2 text-3xl font-bold"><%= @events_today_count %></p>
       <p class="mt-1 text-xs text-gray-500">Across all devices</p>
     </div>
+
+    <!-- Doorbell presses -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
       <p class="text-xs text-gray-500 uppercase tracking-wider">Doorbell presses</p>
-      <p class="mt-2 text-3xl font-bold text-gray-600">—</p>
-      <p class="mt-1 text-xs text-gray-500">No events yet</p>
+      <p class="mt-2 text-3xl font-bold text-indigo-400"><%= @doorbell_count %></p>
+      <p class="mt-1 text-xs text-gray-500">
+        <% if @last_doorbell %>
+          Last: <%= time_ago_in_words(@last_doorbell.occurred_at) %> ago
+        <% else %>
+          No events today
+        <% end %>
+      </p>
     </div>
+
+    <!-- Motion events -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
       <p class="text-xs text-gray-500 uppercase tracking-wider">Motion events</p>
-      <p class="mt-2 text-3xl font-bold text-gray-600">—</p>
-      <p class="mt-1 text-xs text-gray-500">No events yet</p>
+      <p class="mt-2 text-3xl font-bold text-amber-400"><%= @motion_count %></p>
+      <p class="mt-1 text-xs text-gray-500">
+        <% if @last_motion %>
+          Last: <%= time_ago_in_words(@last_motion.occurred_at) %> ago
+        <% else %>
+          No events today
+        <% end %>
+      </p>
     </div>
+
   </div>
 
-  <!-- Placeholder events feed (populated by issues #3 and #6) -->
+  <!-- Recent events feed -->
   <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
       <h3 class="text-sm font-semibold">Recent Events</h3>
-      <span class="text-xs text-gray-500"><%= Date.current.strftime("%-d %b %Y") %></span>
+      <span class="text-xs text-gray-500">Today, <%= Date.current.strftime("%-d %b %Y") %></span>
     </div>
-    <div class="px-5 py-12 text-center">
-      <p class="text-sm text-gray-500">No events yet. Events will appear here once your devices are connected.</p>
-    </div>
+
+    <% if @recent_events.any? %>
+      <div class="divide-y divide-gray-800">
+        <%= render partial: "event_row", collection: @recent_events, as: :event %>
+      </div>
+      <div class="px-5 py-3 border-t border-gray-800 text-center">
+        <a href="#" class="text-xs text-indigo-400 hover:text-indigo-300 transition">View all events</a>
+      </div>
+    <% else %>
+      <div class="px-5 py-12 text-center">
+        <p class="text-sm text-gray-500">No events yet. Events will appear here once your devices are connected.</p>
+      </div>
+    <% end %>
   </div>
 
 </div>
