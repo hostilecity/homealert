@@ -24,25 +24,25 @@ RSpec.describe "Dashboard", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "groups recent events by date" do
-        today     = Time.current
-        yesterday = 1.day.ago
-
-        create(:event, occurred_at: today,     event_type: "doorbell_pressed")
-        create(:event, occurred_at: yesterday, event_type: "motion_detected")
+      it "groups recent events by date and renders date divider labels" do
+        create(:event, occurred_at: Time.current,  event_type: "doorbell_pressed")
+        create(:event, occurred_at: 1.day.ago,     event_type: "motion_detected")
 
         get root_path
 
-        # The controller assigns @recent_events_by_date; since we are not
-        # running view specs we verify the response is successful and the
-        # events exist in the DB so the query path is exercised.
         expect(response).to have_http_status(:ok)
+        # The _date_divider partial renders the label from event_date_label(date),
+        # so "Today" and "Yesterday" must appear when events span two calendar days.
+        expect(response.body).to include("Today")
+        expect(response.body).to include("Yesterday")
       end
 
       it "limits recent events to 10" do
         create_list(:event, 12)
         get root_path
         expect(response).to have_http_status(:ok)
+        # Each event row renders with a data-event-id attribute; assert exactly 10.
+        expect(response.body.scan(/data-event-id=/).length).to eq(10)
       end
     end
   end

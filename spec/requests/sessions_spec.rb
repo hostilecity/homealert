@@ -12,14 +12,7 @@ RSpec.describe "Sessions", type: :request do
     context "when already signed in" do
       it "redirects to root" do
         user = create(:user)
-        # Stub before the request rather than using sign_in, because
-        # AuthHelpers#sign_in tries to set session[:user_id] before any
-        # request has been made, which raises a NoMethodError in request specs.
-        allow_any_instance_of(ApplicationController)
-          .to receive(:current_user).and_return(user)
-        allow_any_instance_of(ApplicationController)
-          .to receive(:require_authentication)
-
+        sign_in(user)
         get login_path
         expect(response).to redirect_to(root_path)
       end
@@ -29,11 +22,7 @@ RSpec.describe "Sessions", type: :request do
   describe "POST /logout" do
     it "resets the session and redirects to login with notice" do
       user = create(:user)
-      allow_any_instance_of(ApplicationController)
-        .to receive(:current_user).and_return(user)
-      allow_any_instance_of(ApplicationController)
-        .to receive(:require_authentication)
-
+      sign_in(user)
       post logout_path
       expect(response).to redirect_to(login_path)
       expect(flash[:notice]).to eq("You have been signed out.")

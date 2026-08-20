@@ -33,17 +33,15 @@ RSpec.describe "Events", type: :request do
       end
 
       context "with poll=true and a newer event exists" do
-        it "does not return 204 (proceeds to render)" do
+        it "returns 200 and renders the poll response partial" do
           existing = create(:event)
           _newer   = create(:event)
-          # The controller passes the no-content gate and calls render partial.
-          # The _poll_response partial uses a relative `render "stat_cards"`
-          # which resolves against EventsController's view path and raises
-          # MissingTemplate. Stub render to bypass the view layer and verify
-          # only the branching logic (not-204 path).
-          allow_any_instance_of(EventsController).to receive(:render)
           get events_feed_path(poll: true, newest_id: existing.id)
-          expect(response).not_to have_http_status(:no_content)
+          expect(response).to have_http_status(:ok)
+          # The _poll_response partial wraps stat cards and feed rows in
+          # named divs that the Stimulus feed controller targets.
+          expect(response.body).to include("poll-stat-cards")
+          expect(response.body).to include("poll-feed-rows")
         end
       end
 
@@ -58,12 +56,14 @@ RSpec.describe "Events", type: :request do
           expect(response).to have_http_status(:ok)
         end
 
-        it "returns events older than the cursor" do
-          _old   = create(:event, occurred_at: 3.hours.ago)
-          _newer = create(:event, occurred_at: 30.minutes.ago)
-          cursor = 1.hour.ago.iso8601
+        it "returns only events older than the cursor" do
+          old_event  = create(:event, occurred_at: 3.hours.ago, device_name: "OldCamera")
+          new_event  = create(:event, occurred_at: 30.minutes.ago, device_name: "NewCamera")
+          cursor     = 1.hour.ago.iso8601
           get events_feed_path(before_occurred_at: cursor)
           expect(response).to have_http_status(:ok)
+          expect(response.body).to include(old_event.device_name)
+          expect(response.body).not_to include(new_event.device_name)
         end
 
         it "accepts an optional last_date param" do

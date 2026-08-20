@@ -38,9 +38,10 @@ RSpec.describe "Settings", type: :request do
 
       it "exposes the user's most-recent push subscription" do
         _old    = create(:push_subscription, user: user, created_at: 2.days.ago)
-        _recent = create(:push_subscription, user: user, created_at: 1.hour.ago)
+        recent  = create(:push_subscription, user: user, created_at: 1.hour.ago)
         get settings_path
-        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("data-push-subscription-id-value=\"#{recent.id}\"")
+        expect(response.body).not_to include("data-push-subscription-id-value=\"#{_old.id}\"")
       end
     end
   end

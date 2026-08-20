@@ -38,10 +38,15 @@ RSpec.describe "Webhooks::ReoLink", type: :request do
   end
 
   it "does not require a CSRF token" do
-    # Rails test env disables CSRF by default; this verifies the controller
-    # skips verify_authenticity_token explicitly (no 422 from CSRF check).
+    # Rails disables forgery protection globally in test. Enable it for this
+    # example so that the assertion is a real proof that the controller calls
+    # skip_before_action :verify_authenticity_token — without the skip, Rails
+    # would raise ActionController::InvalidAuthenticityToken and return 422.
+    ActionController::Base.allow_forgery_protection = true
     post_reolink(doorbell_payload)
     expect(response).not_to have_http_status(:unprocessable_entity)
+  ensure
+    ActionController::Base.allow_forgery_protection = false
   end
 
   # ------------------------------------------------------------------ #

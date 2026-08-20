@@ -1,7 +1,7 @@
 <%# Wrapper parsed by feed_controller: contains stat cards + feed rows in one response %>
 <div id="poll-stat-cards">
-  <%= render "stat_cards" %>
+  <%= render "dashboard/stat_cards" %>
 </div>
 <div id="poll-feed-rows">
-  <%= render "feed_rows", events: events, context: :poll, has_more: has_more %>
+  <%= render "dashboard/feed_rows", events: events, context: :poll, has_more: has_more %>
 </div>
