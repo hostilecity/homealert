@@ -26,7 +26,6 @@
         <a href="settings.html"
           class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Settings</a>
       </nav>
-      <!-- Avatar -->
       <div class="flex items-center gap-2">
         <img src="https://ui-avatars.com/api/?name=Ryan+Tulino&background=4f46e5&color=fff&size=32"
           class="w-8 h-8 rounded-full" alt="User avatar" />
@@ -45,43 +44,40 @@
 
     <!-- Stat cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
         <p class="text-xs text-gray-500 uppercase tracking-wider">Events today</p>
         <p class="mt-2 text-3xl font-bold">7</p>
         <p class="mt-1 text-xs text-gray-500">Across all devices</p>
       </div>
-
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
         <p class="text-xs text-gray-500 uppercase tracking-wider">Doorbell presses</p>
         <p class="mt-2 text-3xl font-bold text-indigo-400">3</p>
         <p class="mt-1 text-xs text-gray-500">Last: 42 min ago</p>
       </div>
-
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
         <p class="text-xs text-gray-500 uppercase tracking-wider">Motion events</p>
         <p class="mt-2 text-3xl font-bold text-amber-400">4</p>
         <p class="mt-1 text-xs text-gray-500">Last: 18 min ago</p>
       </div>
-
     </div>
 
-    <!-- Recent events feed with date group dividers -->
+    <!--
+      ═══════════════════════════════════════════════════════════
+        SCENARIO A: events exist today
+        The first date divider is "Today". No card header.
+      ═══════════════════════════════════════════════════════════
+    -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-        <h3 class="text-sm font-semibold">Recent Events</h3>
-      </div>
 
-      <!-- ── Date group: Today ─────────────────────────────────────────── -->
+      <!-- No card header — the first date divider anchors the section -->
 
-      <!-- Date divider -->
-      <div class="flex items-center gap-3 px-5 py-2 bg-gray-900/60">
+      <!-- Date divider: Today (always the first divider when events exist today) -->
+      <div class="flex items-center gap-3 px-5 py-2.5">
         <div class="flex-1 h-px bg-gray-800"></div>
         <span class="text-xs font-medium text-gray-500 uppercase tracking-widest flex-shrink-0">Today</span>
         <div class="flex-1 h-px bg-gray-800"></div>
       </div>
 
-      <!-- Event row: doorbell -->
       <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
         <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-indigo-600/20 flex items-center justify-center">
           <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -99,24 +95,6 @@
         </div>
       </div>
 
-      <!-- Event row: motion -->
-      <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
-        <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-600/20 flex items-center justify-center">
-          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5 6.75 14.25 10.5l5.25-5.25M3.75 13.5H9m-5.25 0V7.5" />
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-white">Motion detected</p>
-          <p class="text-xs text-gray-500 truncate">Reolink Video Doorbell WiFi — doorbell</p>
-        </div>
-        <div class="text-right flex-shrink-0">
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/50 text-amber-300">Motion</span>
-          <p class="mt-1 text-xs text-gray-500">4:24 PM</p>
-        </div>
-      </div>
-
-      <!-- Event row: motion -->
       <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
         <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-600/20 flex items-center justify-center">
           <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -133,16 +111,13 @@
         </div>
       </div>
 
-      <!-- ── Date group: Yesterday ─────────────────────────────────────── -->
-
-      <!-- Date divider -->
-      <div class="flex items-center gap-3 px-5 py-2 bg-gray-900/60">
+      <!-- Date divider: Yesterday -->
+      <div class="flex items-center gap-3 px-5 py-2.5 border-t border-gray-800">
         <div class="flex-1 h-px bg-gray-800"></div>
         <span class="text-xs font-medium text-gray-500 uppercase tracking-widest flex-shrink-0">Yesterday</span>
         <div class="flex-1 h-px bg-gray-800"></div>
       </div>
 
-      <!-- Event row: doorbell -->
       <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
         <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-indigo-600/20 flex items-center justify-center">
           <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -160,33 +135,13 @@
         </div>
       </div>
 
-      <!-- Event row: motion -->
-      <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
-        <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-600/20 flex items-center justify-center">
-          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5 6.75 14.25 10.5l5.25-5.25M3.75 13.5H9m-5.25 0V7.5" />
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-white">Motion detected</p>
-          <p class="text-xs text-gray-500 truncate">Reolink Video Doorbell WiFi — doorbell</p>
-        </div>
-        <div class="text-right flex-shrink-0">
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/50 text-amber-300">Motion</span>
-          <p class="mt-1 text-xs text-gray-500">8:47 AM</p>
-        </div>
-      </div>
-
-      <!-- ── Date group: older (named weekday + date) ──────────────────── -->
-
-      <!-- Date divider -->
-      <div class="flex items-center gap-3 px-5 py-2 bg-gray-900/60">
+      <!-- Date divider: older named date -->
+      <div class="flex items-center gap-3 px-5 py-2.5 border-t border-gray-800">
         <div class="flex-1 h-px bg-gray-800"></div>
         <span class="text-xs font-medium text-gray-500 uppercase tracking-widest flex-shrink-0">Monday, Aug 18</span>
         <div class="flex-1 h-px bg-gray-800"></div>
       </div>
 
-      <!-- Event row: doorbell -->
       <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
         <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-indigo-600/20 flex items-center justify-center">
           <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -201,6 +156,60 @@
         <div class="text-right flex-shrink-0">
           <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-900/50 text-indigo-300">Doorbell</span>
           <p class="mt-1 text-xs text-gray-500">6:15 PM</p>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-gray-800 text-center">
+        <a href="#" class="text-xs text-indigo-400 hover:text-indigo-300 transition">View all events</a>
+      </div>
+    </div>
+
+    <!--
+      ═══════════════════════════════════════════════════════════
+        SCENARIO B: no events today — last event was Monday, Aug 18
+        The first date divider starts with that date, not "Today".
+        No "Today" or "Yesterday" divider appears.
+      ═══════════════════════════════════════════════════════════
+    -->
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+
+      <!-- Date divider: Monday, Aug 18 — the oldest (and first) date in the feed -->
+      <div class="flex items-center gap-3 px-5 py-2.5">
+        <div class="flex-1 h-px bg-gray-800"></div>
+        <span class="text-xs font-medium text-gray-500 uppercase tracking-widest flex-shrink-0">Monday, Aug 18</span>
+        <div class="flex-1 h-px bg-gray-800"></div>
+      </div>
+
+      <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
+        <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-indigo-600/20 flex items-center justify-center">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-white">Doorbell pressed</p>
+          <p class="text-xs text-gray-500 truncate">Reolink Video Doorbell WiFi — doorbell</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-900/50 text-indigo-300">Doorbell</span>
+          <p class="mt-1 text-xs text-gray-500">6:15 PM</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 px-5 py-4 border-t border-gray-800">
+        <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-amber-600/20 flex items-center justify-center">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5 6.75 14.25 10.5l5.25-5.25M3.75 13.5H9m-5.25 0V7.5" />
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-white">Motion detected</p>
+          <p class="text-xs text-gray-500 truncate">Reolink Video Doorbell WiFi — doorbell</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/50 text-amber-300">Motion</span>
+          <p class="mt-1 text-xs text-gray-500">2:30 PM</p>
         </div>
       </div>
 
