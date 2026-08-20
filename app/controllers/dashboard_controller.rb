@@ -9,6 +9,6 @@ class DashboardController < ApplicationController
     @motion_count          = today.motion_detected.count
     @last_doorbell         = today.doorbell_pressed.recent.first
     @last_motion           = today.motion_detected.recent.first
-    @recent_events         = Event.recent.limit(10)
+    @recent_events_by_date = Event.recent.limit(10).group_by { |e| e.occurred_at.in_time_zone.to_date }
   end
 end
