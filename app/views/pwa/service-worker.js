@@ -23,19 +23,14 @@ self.addEventListener("push", (event) => {
     // fall through with defaults
   }
 
-  const promise = self.registration.showNotification(title, {
-    body:    body,
-    icon:    "/icon.png",
-    badge:   "/icon.png",
-    data:    { path: path },
-    requireInteraction: false
-  }).then(() => {
-    console.log("[SW] showNotification resolved OK")
-  }).catch((err) => {
-    console.error("[SW] showNotification FAILED:", err)
-  })
-
-  event.waitUntil(promise)
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body:  body,
+      icon:  "/icon.png",
+      badge: "/icon.png",
+      data:  { path: path }
+    })
+  )
 })
 
 self.addEventListener("notificationclick", (event) => {
