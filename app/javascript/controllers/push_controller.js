@@ -28,9 +28,8 @@ export default class extends Controller {
       return
     }
 
-    // Always unsubscribe any existing browser-side subscription first.
-    // This forces Chrome to generate a fresh modern FCM endpoint rather
-    // than reusing a stale legacy one (fcm/send/ format, deprecated June 2024).
+    // Unsubscribe any existing browser-side subscription first so Chrome
+    // generates a fresh one rather than reusing a cached legacy endpoint.
     const existing = await registration.pushManager.getSubscription()
     if (existing) await existing.unsubscribe()
 
@@ -43,6 +42,21 @@ export default class extends Controller {
     } catch (err) {
       console.error("Push subscription failed:", err)
       this.setStatus("Could not enable notifications. Check browser permissions.")
+      return
+    }
+
+    // Detect legacy FCM endpoints before posting to the server.
+    // These use the deprecated fcm/send/ format (shut down June 2024) and
+    // will never deliver. They appear when Chrome reuses an old GCM sender
+    // ID from a previous service worker registration. The only fix is to
+    // clear all site data so Chrome re-registers the service worker fresh.
+    if (subscription.endpoint.includes("fcm.googleapis.com/fcm/send/")) {
+      await subscription.unsubscribe()
+      this.setStatus(
+        "Your browser has a stale push registration. To fix: go to " +
+        "chrome://settings/content/notifications, remove this site, then " +
+        "go to DevTools → Application → Storage → Clear site data, reload, and try again."
+      )
       return
     }
 
