@@ -3,7 +3,7 @@ name: Deploy Application
 on:
   push:
     branches:
-      - master
+      - main
 
 env:
   # Configuration unique to this specific application and target VM
