@@ -1,0 +1,42 @@
+<%#
+  Renders grouped event rows with date dividers.
+
+  locals:
+    events    - ActiveRecord::Relation or Array of Event records (newest-first)
+    context   - :initial | :prepend | :append
+    last_date - Date of the last-rendered event visible above this fragment (for :append),
+                used to suppress a redundant leading divider
+    has_more  - boolean; only relevant for :append — controls "View more" visibility
+%>
+<% groups = events.group_by { |e| e.occurred_at.in_time_zone.to_date } %>
+
+<% groups.each_with_index do |(date, group_events), index| %>
+  <%
+    # For :prepend (polling) — each injected chunk is newest-first,
+    # so every group always gets a divider (it appears at the top of the chunk).
+    # For :append (view more) — suppress the divider on the first group only
+    # when it falls on the same date as the last already-visible event.
+    suppress_divider = context == :append && index.zero? && last_date == date
+    first_in_card    = context == :initial && index.zero?
+  %>
+  <% unless suppress_divider %>
+    <%= render "dashboard/date_divider",
+               label: event_date_label(date),
+               first: first_in_card %>
+  <% end %>
+  <%= render partial: "dashboard/event_row", collection: group_events, as: :event %>
+<% end %>
+
+<% if context == :append %>
+  <%# Replace the view-more footer based on whether there are more events %>
+  <div id="view-more-footer"
+       class="px-5 py-3 border-t border-gray-800 text-center"
+       data-feed-target="footer">
+    <% if defined?(has_more) && has_more %>
+      <button class="text-xs text-indigo-400 hover:text-indigo-300 transition"
+              data-action="click->feed#loadMore">
+        View more
+      </button>
+    <% end %>
+  </div>
+<% end %>
