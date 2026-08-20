@@ -1,0 +1,65 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  # Configuration unique to this specific application and target VM
+  TARGET_VM_HOST: "security-vm.hostilecity.net"
+  TARGET_VM_USER: "engineer"
+  APP_NAME: "homealert"
+  DEPLOY_DIR: "/home/engineer/build-temp"
+
+jobs:
+  deploy-to-vm:
+    # Route this job to your central protected network runner
+    runs-on: self-hosted
+
+    steps:
+      # 1. Pull the application code onto the central runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up the SSH key in the runner's workspace memory
+      - name: Configure Secure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ env.TARGET_VM_HOST }} >> ~/.ssh/known_hosts
+
+      # 3. Package code and transfer it over to the specific destination VM
+      - name: Transfer Code to Target VM
+        run: |
+          tar -czf app.tar.gz .
+          ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}"
+          scp app.tar.gz ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }}:${{ env.DEPLOY_DIR }}/
+          ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "cd ${{ env.DEPLOY_DIR }} && tar -xzf app.tar.gz && rm app.tar.gz"
+
+      # 4. Run the remote build/restart logic directly on the destination machine
+      - name: Remote Docker Build and Run
+        run: |
+          ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "
+            cd ${{ env.DEPLOY_DIR }} && \
+          
+            echo '==> Building Docker Image...' && \
+            docker build -t ${{ env.APP_NAME }}:latest . && \
+          
+            echo '==> Cycling Container...' && \
+            docker stop ${{ env.APP_NAME }} || true && \
+            docker rm ${{ env.APP_NAME }} || true && \
+          
+            docker run -d \
+              --name ${{ env.APP_NAME }} \
+              -p 80:80 \
+              --restart unless-stopped \
+              ${{ env.APP_NAME }}:latest
+          "
+
+      # 5. Clean up the source artifacts from the target machine's disk
+      - name: Cleanup Target Workspace
+        if: always()
+        run: |
+          ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "rm -rf ${{ env.DEPLOY_DIR }}"
