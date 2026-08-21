@@ -11,6 +11,9 @@ env:
   TARGET_VM_USER: "engineer"
   APP_NAME: "homealert"
   DEPLOY_DIR: "/home/engineer/build-temp"
+  # Docker network created by the separate postgres compose project.
+  # The app must join it to resolve the "postgres" hostname.
+  DB_NETWORK: "postgres_postgres_net"
 
 jobs:
   deploy-to-vm:
@@ -52,6 +55,9 @@ jobs:
           ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "
             cd ${{ env.DEPLOY_DIR }} && \
           
+            echo '==> Verifying database network exists...' && \
+            docker network inspect ${{ env.DB_NETWORK }} >/dev/null && \
+
             echo '==> Building Docker Image...' && \
             docker build -t ${{ env.APP_NAME }}:latest . && \
           
@@ -62,6 +68,7 @@ jobs:
             docker run -d \
               --name ${{ env.APP_NAME }} \
               -p 80:80 \
+              --network ${{ env.DB_NETWORK }} \
               --restart unless-stopped \
               -e RAILS_MASTER_KEY='$RAILS_MASTER_KEY' \
               -e DATABASE_PASSWORD='$DATABASE_PASSWORD' \
