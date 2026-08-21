@@ -36,9 +36,9 @@ jobs:
       # 3. Package code and transfer it over to the specific destination VM
       - name: Transfer Code to Target VM
         run: |
-          tar -czf app.tar.gz --exclude='app.tar.gz' .
+          tar -czf ../app.tar.gz --exclude=.git .
           ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}"
-          scp app.tar.gz ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }}:${{ env.DEPLOY_DIR }}/
+          scp ../app.tar.gz ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }}:${{ env.DEPLOY_DIR }}/
           ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "cd ${{ env.DEPLOY_DIR }} && tar -xzf app.tar.gz && rm app.tar.gz"
 
       # 4. Run the remote build/restart logic directly on the destination machine
