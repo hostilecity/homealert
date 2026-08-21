@@ -87,9 +87,10 @@ test:
 production:
   primary: &primary_production
     <<: *default
+    host: postgres
     database: homealert_production
     username: homealert
-    password: <%= ENV["HOMEALERT_DATABASE_PASSWORD"] %>
+    password: <%= ENV["DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: homealert_production_cache
