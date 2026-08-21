@@ -152,6 +152,67 @@ RSpec.describe PushNotificationJob, type: :job do
   end
 
   # ------------------------------------------------------------------ #
+  # Multiple devices for a single user                                   #
+  # ------------------------------------------------------------------ #
+  describe "when one user has several devices" do
+    let!(:laptop) { create(:push_subscription, user: user, device_label: "Chrome on macOS") }
+    let!(:phone)  { create(:push_subscription, user: user, device_label: "Safari on iPhone") }
+
+    before { create(:notification_preference, user: user, doorbell_pressed: true, motion_detected: true) }
+
+    it "sends to every device the user has registered" do
+      described_class.perform_now(event.id)
+      # the shared `subscription` plus the two devices created here
+      expect(WebPush).to have_received(:payload_send).exactly(3).times
+    end
+
+    it "targets each device endpoint" do
+      described_class.perform_now(event.id)
+      expect(WebPush).to have_received(:payload_send).with(hash_including(endpoint: laptop.endpoint))
+      expect(WebPush).to have_received(:payload_send).with(hash_including(endpoint: phone.endpoint))
+    end
+
+    it "still delivers to the remaining devices when one endpoint fails" do
+      allow(WebPush).to receive(:payload_send)
+        .with(hash_including(endpoint: laptop.endpoint))
+        .and_raise(Net::ReadTimeout)
+
+      described_class.perform_now(event.id)
+
+      expect(WebPush).to have_received(:payload_send).with(hash_including(endpoint: phone.endpoint))
+    end
+
+    it "does not remove a device that merely timed out" do
+      allow(WebPush).to receive(:payload_send).and_raise(Net::ReadTimeout)
+      expect { described_class.perform_now(event.id) }.not_to change(PushSubscription, :count)
+    end
+
+    it "looks the notification preference up once per user" do
+      allow(NotificationPreference).to receive(:for_user).and_call_original
+      described_class.perform_now(event.id)
+      expect(NotificationPreference).to have_received(:for_user).once
+    end
+  end
+
+  # ------------------------------------------------------------------ #
+  # Delivery options                                                     #
+  # ------------------------------------------------------------------ #
+  describe "delivery options" do
+    before { create(:notification_preference, user: user, doorbell_pressed: true, motion_detected: true) }
+
+    it "sets a ttl so alerts survive a briefly offline device" do
+      described_class.perform_now(event.id)
+      expect(WebPush).to have_received(:payload_send)
+        .with(hash_including(ttl: described_class::TTL_SECONDS))
+    end
+
+    it "sends with high urgency" do
+      described_class.perform_now(event.id)
+      expect(WebPush).to have_received(:payload_send).with(hash_including(urgency: "high"))
+    end
+  end
+
+  # ------------------------------------------------------------------ #
   # Error handling                                                       #
   # ------------------------------------------------------------------ #
   shared_context "with preference enabled" do

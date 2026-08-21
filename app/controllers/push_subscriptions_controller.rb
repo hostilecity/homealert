@@ -34,7 +34,14 @@ class PushSubscriptionsController < ApplicationController
       device_label: subscription_params[:device_label]
     )
     subscription.save!
-    head :created
+
+    retire_previous_endpoint(subscription)
+
+    render json: {
+      id:              subscription.id,
+      endpoint_digest: subscription.endpoint_digest,
+      device_label:    subscription.device_label
+    }, status: :created
   rescue ActionController::ParameterMissing, ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -49,6 +56,16 @@ class PushSubscriptionsController < ApplicationController
 
   private
 
+  # A browser may rotate the endpoint of an existing subscription (permission
+  # re-grant, push service migration, PWA reinstall). Without this the old row
+  # lingers as a phantom device and wastes a delivery attempt on every event.
+  def retire_previous_endpoint(subscription)
+    previous = params[:subscription][:previous_endpoint].presence
+    return if previous.blank? || previous == subscription.endpoint
+
+    current_user.push_subscriptions.where(endpoint: previous).destroy_all
+  end
+
   def valid_endpoint?(endpoint)
     uri = URI.parse(endpoint)
     return false unless uri.scheme == "https"
@@ -61,6 +78,7 @@ class PushSubscriptionsController < ApplicationController
   end
 
   def subscription_params
-    params.require(:subscription).permit(:endpoint, :p256dh_key, :auth_key, :device_label)
+    params.require(:subscription)
+          .permit(:endpoint, :p256dh_key, :auth_key, :device_label, :previous_endpoint)
   end
 end

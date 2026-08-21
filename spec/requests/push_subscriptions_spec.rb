@@ -39,6 +39,70 @@ RSpec.describe "PushSubscriptions", type: :request do
           post push_subscriptions_path, params: valid_params
           expect(response).to have_http_status(:created)
         end
+
+        it "returns the record id and endpoint digest" do
+          post push_subscriptions_path, params: valid_params
+          json = JSON.parse(response.body)
+          expect(json["id"]).to eq(PushSubscription.last.id)
+          expect(json["endpoint_digest"]).to eq(PushSubscription.last.endpoint_digest)
+        end
+      end
+
+      context "with several devices" do
+        it "keeps a subscription per device" do
+          first  = valid_params
+          second = valid_params.deep_merge(
+            subscription: {
+              endpoint:     "https://web.push.apple.com/unique-token-xyz",
+              device_label: "Safari on iPhone"
+            }
+          )
+
+          expect {
+            post push_subscriptions_path, params: first
+            post push_subscriptions_path, params: second
+          }.to change { user.push_subscriptions.count }.by(2)
+
+          expect(user.push_subscriptions.pluck(:device_label))
+            .to contain_exactly("My Phone", "Safari on iPhone")
+        end
+      end
+
+      context "when the device reports a rotated endpoint" do
+        let!(:stale) do
+          create(:push_subscription, user: user, endpoint: "https://fcm.googleapis.com/fcm/send/old-token")
+        end
+
+        let(:rotated_params) do
+          valid_params.deep_merge(
+            subscription: { previous_endpoint: "https://fcm.googleapis.com/fcm/send/old-token" }
+          )
+        end
+
+        it "removes the superseded record" do
+          post push_subscriptions_path, params: rotated_params
+          expect(PushSubscription.exists?(stale.id)).to be(false)
+        end
+
+        it "keeps the newly reported subscription" do
+          post push_subscriptions_path, params: rotated_params
+          expect(user.push_subscriptions.pluck(:endpoint))
+            .to eq([ valid_params[:subscription][:endpoint] ])
+        end
+
+        it "does not remove another user's record with that endpoint" do
+          stale.update!(user: create(:user))
+          post push_subscriptions_path, params: rotated_params
+          expect(PushSubscription.exists?(stale.id)).to be(true)
+        end
+
+        it "does not remove the record it just saved when the endpoint is unchanged" do
+          params = valid_params.deep_merge(
+            subscription: { previous_endpoint: valid_params[:subscription][:endpoint] }
+          )
+          post push_subscriptions_path, params: params
+          expect(user.push_subscriptions.where(endpoint: valid_params[:subscription][:endpoint])).to exist
+        end
       end
 
       context "with a private/local IP endpoint" do
@@ -147,6 +211,12 @@ RSpec.describe "PushSubscriptions", type: :request do
         it "returns 204 No Content" do
           delete push_subscription_path(subscription)
           expect(response).to have_http_status(:no_content)
+        end
+
+        it "leaves the user's other devices subscribed" do
+          other_device = create(:push_subscription, user: user)
+          delete push_subscription_path(subscription)
+          expect(user.push_subscriptions.reload).to contain_exactly(other_device)
         end
       end
 
