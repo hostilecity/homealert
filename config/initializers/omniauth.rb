@@ -1,5 +1,5 @@
-google_client_id     = Rails.env.production? ? ENV.fetch("GOOGLE_CLIENT_ID") : ENV.fetch("GOOGLE_CLIENT_ID", "")
-google_client_secret = Rails.env.production? ? ENV.fetch("GOOGLE_CLIENT_SECRET") : ENV.fetch("GOOGLE_CLIENT_SECRET", "")
+google_client_id     = ENV.fetch("GOOGLE_CLIENT_ID", "")
+google_client_secret = ENV.fetch("GOOGLE_CLIENT_SECRET", "")
 
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :google_oauth2,
