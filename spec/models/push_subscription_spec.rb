@@ -90,4 +90,25 @@ RSpec.describe PushSubscription, type: :model do
       expect(subscription.web_push_keys.keys).to contain_exactly(:p256dh, :auth)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #endpoint_digest
+  # ---------------------------------------------------------------------------
+  describe "#endpoint_digest" do
+    subject(:subscription) { build(:push_subscription, endpoint: "https://fcm.googleapis.com/fcm/send/abc") }
+
+    it "is the SHA256 hex digest of the endpoint" do
+      expect(subscription.endpoint_digest)
+        .to eq(Digest::SHA256.hexdigest("https://fcm.googleapis.com/fcm/send/abc"))
+    end
+
+    it "never contains the raw endpoint" do
+      expect(subscription.endpoint_digest).not_to include("fcm.googleapis.com")
+    end
+
+    it "differs between devices" do
+      other = build(:push_subscription, endpoint: "https://web.push.apple.com/xyz")
+      expect(subscription.endpoint_digest).not_to eq(other.endpoint_digest)
+    end
+  end
 end

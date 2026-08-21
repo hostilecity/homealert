@@ -97,6 +97,26 @@ VAPID_PRIVATE_KEY=generated-private-key
 - Keys must remain stable — changing them invalidates all existing push subscriptions.
 - Keep `VAPID_PRIVATE_KEY` secret.
 
+### Background job processing
+
+Push notifications are dispatched asynchronously by `PushNotificationJob`. In production the Active Job backend is Solid Queue, so **a worker must be running or notifications are enqueued and never sent** — the web app keeps recording events normally, which makes the failure easy to miss.
+
+| Variable | Description |
+|---|---|
+| `SOLID_QUEUE_IN_PUMA` | Set to `true` to run the Solid Queue supervisor inside the Puma process (single-server deployments) |
+
+Development uses the in-process `:async` adapter, so no worker is needed there.
+
+To check for a stalled queue in production:
+
+```bash
+docker exec homealert ./bin/rails runner 'puts SolidQueue::Job.where(finished_at: nil).count'
+```
+
+### Multiple devices
+
+Each browser or installed PWA registers its own subscription, and every event is delivered to all of them. Devices are listed under **Settings → Devices**, where the browser you are currently using is badged "This device". Removing a device only unsubscribes that one.
+
 ### Push notifications on iOS
 
 iOS requires the app to be installed as a PWA (Add to Home Screen) before push notifications are delivered. Safari 16.4+ on iOS supports Web Push for installed PWAs.

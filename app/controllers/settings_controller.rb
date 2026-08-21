@@ -3,7 +3,7 @@ class SettingsController < ApplicationController
 
   def index
     @notification_preference = NotificationPreference.for_user(current_user)
-    @push_subscription        = current_user.push_subscriptions.order(created_at: :desc).first
+    @push_subscriptions      = current_user.push_subscriptions.order(created_at: :desc)
   end
 
   def update_notification_preferences

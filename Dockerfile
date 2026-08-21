@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
+# This Dockerfile is designed for production, not development. It is built and run by
+# .github/workflows/cd.yml, or by hand:
 # docker build -t homealert .
 # docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name homealert homealert
 

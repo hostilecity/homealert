@@ -36,12 +36,41 @@ RSpec.describe "Settings", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "exposes the user's most-recent push subscription" do
-        _old    = create(:push_subscription, user: user, created_at: 2.days.ago)
-        recent  = create(:push_subscription, user: user, created_at: 1.hour.ago)
+      it "lists every push subscription belonging to the user" do
+        older  = create(:push_subscription, user: user, created_at: 2.days.ago, device_label: "Chrome on macOS")
+        recent = create(:push_subscription, user: user, created_at: 1.hour.ago, device_label: "Safari on iPhone")
+
         get settings_path
-        expect(response.body).to include("data-push-subscription-id-value=\"#{recent.id}\"")
-        expect(response.body).not_to include("data-push-subscription-id-value=\"#{_old.id}\"")
+
+        expect(response.body).to include("data-device-id=\"#{older.id}\"")
+        expect(response.body).to include("data-device-id=\"#{recent.id}\"")
+        expect(response.body).to include("Chrome on macOS")
+        expect(response.body).to include("Safari on iPhone")
+      end
+
+      it "renders the endpoint digest rather than the raw endpoint" do
+        subscription = create(:push_subscription, user: user)
+
+        get settings_path
+
+        expect(response.body).to include(subscription.endpoint_digest)
+        expect(response.body).not_to include(subscription.endpoint)
+      end
+
+      it "does not list another user's subscriptions" do
+        other = create(:push_subscription, user: create(:user), device_label: "Someone Else")
+
+        get settings_path
+
+        expect(response.body).not_to include("data-device-id=\"#{other.id}\"")
+      end
+
+      it "renders the enable-notifications control even when a device is already registered" do
+        create(:push_subscription, user: user)
+
+        get settings_path
+
+        expect(response.body).to include("data-push-target=\"subscribeBtn\"")
       end
     end
   end
