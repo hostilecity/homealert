@@ -61,9 +61,17 @@ class PushNotificationJob < ApplicationJob
   rescue ArgumentError => e
     Rails.logger.error("PushNotificationJob: invalid VAPID or subscription keys — #{e.message}")
   rescue StandardError => e
-    # Network timeouts, DNS and TLS failures are per-endpoint problems. Swallow
-    # them here so the remaining devices still receive the alert.
+    # Log first so subscription.id context is always captured, then re-raise
+    # anything that isn't a known network/transport-layer failure so Active Job /
+    # Solid Queue can retry or dead-letter the job.
     Rails.logger.error("PushNotificationJob: delivery failed for subscription #{subscription.id}: #{e.class} #{e.message}")
+
+    raise unless e.is_a?(Net::OpenTimeout)     ||
+                 e.is_a?(Net::ReadTimeout)      ||
+                 e.is_a?(Errno::ECONNREFUSED)   ||
+                 e.is_a?(Errno::ECONNRESET)     ||
+                 e.is_a?(SocketError)           ||
+                 e.is_a?(OpenSSL::SSL::SSLError)
   end
 
   def enabled_for?(user, event_type)
