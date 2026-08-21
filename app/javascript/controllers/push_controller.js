@@ -64,8 +64,10 @@ export default class extends Controller {
 
     // The browser holds a subscription the server has never seen — typically
     // the record was removed on another device, or the push service rotated the
-    // endpoint. Re-register it silently so this device keeps working.
-    const saved = await this.persist(subscription)
+    // endpoint. Re-register it silently so this device keeps working. Pass the
+    // current endpoint as `previous_endpoint` so the server can retire any
+    // stale row that may still exist under the old endpoint.
+    const saved = await this.persist(subscription, subscription.endpoint)
     if (saved) {
       window.location.reload()
     } else {
@@ -135,18 +137,31 @@ export default class extends Controller {
   }
 
   async unsubscribe(event) {
-    const id = event.currentTarget.dataset.deviceId
+    // Capture button and current-device flag before any await — event.currentTarget
+    // becomes null once the synchronous dispatch completes.
+    const btn             = event.currentTarget
+    const id              = btn.dataset.deviceId
+    const isCurrentDevice = btn.closest("[data-endpoint-digest]")?.dataset.isCurrentDevice === "true"
+
     if (!id) return
 
-    event.currentTarget.disabled = true
+    btn.disabled = true
 
-    const response = await fetch(`${this.urlValue}/${id}`, {
-      method:  "DELETE",
-      headers: { "X-CSRF-Token": this.csrfToken() }
-    })
+    let response
+    try {
+      response = await fetch(`${this.urlValue}/${id}`, {
+        method:  "DELETE",
+        headers: { "X-CSRF-Token": this.csrfToken() }
+      })
+    } catch (err) {
+      console.error("Push unsubscribe network error:", err)
+      btn.disabled = false
+      this.setStatus("Could not reach the server. Check your connection and try again.")
+      return
+    }
 
     if (!response.ok) {
-      event.currentTarget.disabled = false
+      btn.disabled = false
       this.setStatus("Could not remove that device. Please try again.")
       return
     }
@@ -154,7 +169,7 @@ export default class extends Controller {
     // Only tear down the browser-side subscription when the row that was
     // removed is this very device; otherwise we would silently disable
     // notifications here while the user was removing their other device.
-    if (event.currentTarget.closest("[data-endpoint-digest]")?.dataset.isCurrentDevice === "true") {
+    if (isCurrentDevice) {
       try {
         const registration = await this.registration()
         const subscription = await registration?.pushManager.getSubscription()
@@ -172,23 +187,30 @@ export default class extends Controller {
   async persist(subscription, previousEndpoint = null) {
     const keys = subscription.toJSON().keys || {}
 
-    const response = await fetch(this.urlValue, {
-      method:  "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept":       "application/json",
-        "X-CSRF-Token": this.csrfToken()
-      },
-      body: JSON.stringify({
-        subscription: {
-          endpoint:          subscription.endpoint,
-          p256dh_key:        keys.p256dh,
-          auth_key:          keys.auth,
-          device_label:      this.deviceLabel(),
-          previous_endpoint: previousEndpoint
-        }
+    let response
+    try {
+      response = await fetch(this.urlValue, {
+        method:  "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept":       "application/json",
+          "X-CSRF-Token": this.csrfToken()
+        },
+        body: JSON.stringify({
+          subscription: {
+            endpoint:          subscription.endpoint,
+            p256dh_key:        keys.p256dh,
+            auth_key:          keys.auth,
+            device_label:      this.deviceLabel(),
+            previous_endpoint: previousEndpoint
+          }
+        })
       })
-    })
+    } catch (err) {
+      console.error("Push persist network error:", err)
+      this.setStatus("Could not reach the server. Check your connection and try again.")
+      return false
+    }
 
     if (response.ok) return true
 
