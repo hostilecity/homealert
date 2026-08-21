@@ -64,10 +64,8 @@ export default class extends Controller {
 
     // The browser holds a subscription the server has never seen — typically
     // the record was removed on another device, or the push service rotated the
-    // endpoint. Re-register it silently so this device keeps working. Pass the
-    // current endpoint as `previous_endpoint` so the server can retire any
-    // stale row that may still exist under the old endpoint.
-    const saved = await this.persist(subscription, subscription.endpoint)
+    // endpoint. Re-register it silently so this device keeps working.
+    const saved = await this.persist(subscription)
     if (saved) {
       window.location.reload()
     } else {
