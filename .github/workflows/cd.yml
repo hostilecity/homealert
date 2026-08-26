@@ -23,7 +23,7 @@ jobs:
     steps:
       # 1. Pull the application code onto the central runner
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 2. Set up the SSH key in the runner's workspace memory
       - name: Configure Secure SSH
