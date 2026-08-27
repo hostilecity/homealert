@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  TYPES = %w[doorbell_pressed motion_detected].freeze
+  TYPES = %w[doorbell_pressed motion_detected vpn_login].freeze
 
   validates :event_type,  presence: true, inclusion: { in: TYPES }
   validates :device_name, presence: true
@@ -10,4 +10,5 @@ class Event < ApplicationRecord
   scope :today,            -> { where(occurred_at: Time.current.beginning_of_day..) }
   scope :doorbell_pressed, -> { where(event_type: "doorbell_pressed") }
   scope :motion_detected,  -> { where(event_type: "motion_detected") }
+  scope :vpn_login,        -> { where(event_type: "vpn_login") }
 end

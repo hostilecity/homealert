@@ -101,6 +101,33 @@
         </button>
       </div>
 
+      <!-- VPN login -->
+      <div class="flex items-center justify-between px-5 py-4"
+           data-controller="toggle"
+           data-toggle-url-value="<%= settings_notification_preferences_path %>"
+           data-toggle-field-value="vpn_login"
+           data-toggle-checked-value="<%= @notification_preference.vpn_login %>">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-9 h-9 rounded-xl bg-emerald-600/20 flex items-center justify-center">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-white">VPN login</p>
+            <p class="text-xs text-gray-500">Notify when someone connects to the VPN</p>
+          </div>
+        </div>
+        <button type="button"
+                role="switch"
+                aria-checked="<%= @notification_preference.vpn_login %>"
+                data-toggle-target="button"
+                data-action="click->toggle#toggle"
+                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 <%= @notification_preference.vpn_login? ? 'bg-indigo-600' : 'bg-gray-700' %>">
+          <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out <%= @notification_preference.vpn_login? ? 'translate-x-5' : 'translate-x-0' %>"></span>
+        </button>
+      </div>
+
     </div>
   </div>
 

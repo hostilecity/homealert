@@ -123,9 +123,11 @@ iOS requires the app to be installed as a PWA (Add to Home Screen) before push n
 
 ## Webhooks
 
+All webhook endpoints are route-constrained to the hostnames `localhost` and `security-vm.hostilecity.net`. Requests on any other hostname return `404 Not Found`. No authentication or CSRF token is required.
+
 ### ReoLink doorbell (`POST /webhooks/reolink`)
 
-The endpoint accepts JSON only and is route-constrained to the webhook hostnames `localhost` and `security-vm.hostilecity.net`. Requests to the same path on any other hostname return `404 Not Found`. A `200 OK` is returned on success; `422 Unprocessable Entity` is returned for unrecognised event types or invalid payloads.
+The endpoint accepts JSON only. A `200 OK` is returned on success; `422 Unprocessable Entity` is returned for unrecognised event types or invalid payloads.
 
 **Doorbell press (Visitor alert):**
 
@@ -166,3 +168,47 @@ curl -X POST http://localhost:3000/webhooks/reolink \
     }
   }'
 ```
+
+### VPN login (`POST /webhooks/vpn_login`)
+
+The endpoint accepts JSON only. A `200 OK` is returned on success; `422 Unprocessable Entity` is returned for unrecognised event values or invalid payloads.
+
+Push notifications for VPN login events are **disabled by default** in user notification preferences. Users can opt in under **Settings → Push Notifications → VPN login**.
+
+#### OpenVPN client-connect script
+
+The webhook is designed to be called from an OpenVPN `client-connect` script. The script at `script/vpn_webhook.sh` is installed on the VPN server and uses environment variables that OpenVPN sets automatically when a client connects:
+
+| Variable | OpenVPN env var | Description |
+|---|---|---|
+| `username` | `$username` | Authenticated username (from `--auth-user-pass`) |
+| `common_name` | `$common_name` | Certificate common name |
+| `source_ip` | `$trusted_ip` | Client's public IP address |
+| `timestamp_unix` | `$time_unix` | Unix timestamp of the connection |
+
+**Install the script on the VPN server:**
+
+```bash
+# Copy the script to the OpenVPN config directory
+cp script/vpn_webhook.sh /etc/openvpn/client-connect.sh
+chmod +x /etc/openvpn/client-connect.sh
+
+# Add to your OpenVPN server config (server.conf):
+# client-connect /etc/openvpn/client-connect.sh
+```
+
+**Test the endpoint manually:**
+
+```bash
+curl -X POST http://localhost:3000/webhooks/vpn_login \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "event":          "vpn_login",
+    "username":       "rtulino",
+    "common_name":    "ryans-macbook",
+    "source_ip":      "203.0.113.42",
+    "timestamp_unix": "1756310400"
+  }'
+```
+
+The `device_name` stored on the event is formatted as `username (common_name)` when both differ, or just the username/common_name alone when they are the same or one is absent. The `source_ip` is stored as `device_id`.

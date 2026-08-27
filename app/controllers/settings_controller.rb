@@ -17,6 +17,6 @@ class SettingsController < ApplicationController
   private
 
   def preference_params
-    params.require(:preference).permit(:doorbell_pressed, :motion_detected)
+    params.require(:preference).permit(:doorbell_pressed, :motion_detected, :vpn_login)
   end
 end
