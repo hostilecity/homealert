@@ -24,7 +24,7 @@ RSpec.describe "Events", type: :request do
         end
       end
 
-      context "with poll=true and latest id matches newest_id" do
+      context "with poll=true and newest_id matches the maximum event id" do
         it "returns 204 No Content" do
           event = create(:event)
           get events_feed_path(poll: true, newest_id: event.id)
@@ -32,7 +32,7 @@ RSpec.describe "Events", type: :request do
         end
       end
 
-      context "with poll=true and a newer event exists" do
+      context "with poll=true and a newer event exists (higher id, later occurred_at)" do
         it "returns 200 and renders the poll response partial" do
           existing = create(:event)
           _newer   = create(:event)
@@ -42,6 +42,21 @@ RSpec.describe "Events", type: :request do
           # named divs that the Stimulus feed controller targets.
           expect(response.body).to include("poll-stat-cards")
           expect(response.body).to include("poll-feed-rows")
+        end
+      end
+
+      context "with poll=true and a new event exists with an earlier occurred_at than the current newest" do
+        it "returns 200 so the new event is not missed" do
+          # Simulate a doorbell event already visible in the feed (high occurred_at).
+          doorbell = create(:event, :doorbell_pressed, occurred_at: 1.hour.ago)
+          # A VPN login arrives with timestamp slightly behind the doorbell — its
+          # occurred_at sorts below the doorbell but its id is higher.
+          _vpn = create(:event, :vpn_login, occurred_at: 2.hours.ago)
+
+          # Client reports it has seen up to the doorbell's id; the VPN event
+          # has a higher id and must not be suppressed.
+          get events_feed_path(poll: true, newest_id: doorbell.id)
+          expect(response).to have_http_status(:ok)
         end
       end
 
