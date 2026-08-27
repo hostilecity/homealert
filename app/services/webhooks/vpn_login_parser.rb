@@ -61,7 +61,7 @@ module Webhooks
       return Time.current unless raw.present?
 
       Time.zone.at(Integer(raw))
-    rescue ArgumentError, TypeError
+    rescue ArgumentError, TypeError, RangeError
       Time.current
     end
   end
