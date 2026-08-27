@@ -115,17 +115,18 @@ export default class extends Controller {
   }
 
   updateCursors() {
-    // Use DOM position (first = newest, last = oldest) rather than max/min over
-    // IDs, since the feed is ordered by occurred_at which may diverge from ID
-    // order if webhook delivery is delayed or clocks are skewed.
     const rows = [...this.listTarget.querySelectorAll("[data-event-id]")]
     if (!rows.length) return
 
-    const newestRow = rows[0]
-    const oldestRow = rows[rows.length - 1]
+    // newestIdValue tracks the maximum event ID seen so the poll detects any
+    // new record, even one with an occurred_at earlier than the current newest
+    // (e.g. a VPN login whose timestamp lags slightly behind a doorbell event).
+    const ids = rows.map(r => parseInt(r.dataset.eventId, 10))
+    this.newestIdValue = Math.max(...ids)
 
-    this.newestIdValue         = parseInt(newestRow.dataset.eventId, 10)
-    this.oldestOccurredAtValue = oldestRow.dataset.eventOccurredAt
+    // oldestOccurredAt uses DOM position (last row = oldest occurred_at) as
+    // the cursor for the "view more" pagination query.
+    this.oldestOccurredAtValue = rows[rows.length - 1].dataset.eventOccurredAt
   }
 
   oldestDate() {

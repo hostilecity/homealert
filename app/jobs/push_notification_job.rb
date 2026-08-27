@@ -84,6 +84,7 @@ class PushNotificationJob < ApplicationJob
     case event.event_type
     when "doorbell_pressed" then "Doorbell pressed"
     when "motion_detected"  then "Motion detected"
+    when "vpn_login"        then "VPN login"
     else event.event_type.humanize
     end
   end

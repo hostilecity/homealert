@@ -5,9 +5,9 @@ class EventsController < ApplicationController
     if params[:poll].present?
       # Polling: re-render the full feed list so the DOM is always consistent.
       # Accepts newest_id so we know whether anything changed since last poll.
-      newest_id = params[:newest_id].to_i
-      latest    = Event.recent.first
-      return head(:no_content) if latest.nil? || latest.id == newest_id
+      newest_id  = params[:newest_id].to_i
+      max_id     = Event.maximum(:id)
+      return head(:no_content) if max_id.nil? || max_id == newest_id
 
       events   = Event.recent.limit(FEED_LIMIT)
       has_more = events.size == FEED_LIMIT

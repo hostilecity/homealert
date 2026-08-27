@@ -3,6 +3,7 @@ class NotificationPreference < ApplicationRecord
 
   validates :doorbell_pressed, inclusion: { in: [ true, false ] }
   validates :motion_detected,  inclusion: { in: [ true, false ] }
+  validates :vpn_login,        inclusion: { in: [ true, false ] }
 
   def self.for_user(user)
     # create_or_find_by! inserts first then falls back to SELECT on unique conflict,
@@ -14,6 +15,7 @@ class NotificationPreference < ApplicationRecord
     case event_type
     when "doorbell_pressed" then doorbell_pressed?
     when "motion_detected"  then motion_detected?
+    when "vpn_login"        then vpn_login?
     else false
     end
   end

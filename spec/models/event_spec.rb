@@ -7,8 +7,8 @@ RSpec.describe Event, type: :model do
   # Constants
   # ---------------------------------------------------------------------------
   describe "TYPES" do
-    it "contains exactly doorbell_pressed and motion_detected" do
-      expect(described_class::TYPES).to contain_exactly("doorbell_pressed", "motion_detected")
+    it "contains exactly doorbell_pressed, motion_detected, and vpn_login" do
+      expect(described_class::TYPES).to contain_exactly("doorbell_pressed", "motion_detected", "vpn_login")
     end
 
     it "is frozen" do
@@ -44,6 +44,11 @@ RSpec.describe Event, type: :model do
 
       it "accepts motion_detected" do
         event.event_type = "motion_detected"
+        expect(event).to be_valid
+      end
+
+      it "accepts vpn_login" do
+        event.event_type = "vpn_login"
         expect(event).to be_valid
       end
     end
@@ -122,6 +127,16 @@ RSpec.describe Event, type: :model do
 
         expect(described_class.motion_detected).to include(motion)
         expect(described_class.motion_detected).not_to include(doorbell)
+      end
+    end
+
+    describe ".vpn_login" do
+      it "returns only vpn_login events" do
+        vpn      = create(:event, :vpn_login)
+        doorbell = create(:event, :doorbell_pressed)
+
+        expect(described_class.vpn_login).to include(vpn)
+        expect(described_class.vpn_login).not_to include(doorbell)
       end
     end
   end

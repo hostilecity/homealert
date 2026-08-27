@@ -12,5 +12,9 @@ FactoryBot.define do
     trait :motion_detected do
       event_type { "motion_detected" }
     end
+
+    trait :vpn_login do
+      event_type { "vpn_login" }
+    end
   end
 end

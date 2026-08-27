@@ -12,7 +12,8 @@ Rails.application.routes.draw do
   # Webhooks (public, no authentication)
   constraints(lambda { |request| request.host.in?(%w[localhost security-vm.hostilecity.net]) }) do
     namespace :webhooks do
-      post "reolink", to: "reolink#create"
+      post "reolink",    to: "reolink#create"
+      post "vpn_login",  to: "vpn_login#create"
     end
   end
 
