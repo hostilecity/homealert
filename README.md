@@ -125,7 +125,7 @@ iOS requires the app to be installed as a PWA (Add to Home Screen) before push n
 
 ### ReoLink doorbell (`POST /webhooks/reolink`)
 
-The endpoint accepts JSON only. A `200 OK` is returned on success; `422 Unprocessable Entity` is returned for unrecognised event types or invalid payloads.
+The endpoint accepts JSON only and is route-constrained to the webhook hostnames `localhost` and `security-vm.hostilecity.net`. Requests to the same path on any other hostname return `404 Not Found`. A `200 OK` is returned on success; `422 Unprocessable Entity` is returned for unrecognised event types or invalid payloads.
 
 **Doorbell press (Visitor alert):**
 

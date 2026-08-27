@@ -25,8 +25,8 @@ RSpec.describe "Webhooks::ReoLink", type: :request do
     }.to_json
   end
 
-  def post_reolink(body, content_type: "application/json")
-    post webhooks_reolink_path, params: body, headers: { "CONTENT_TYPE" => content_type }
+  def post_reolink(body, content_type: "application/json", host: "localhost")
+    post webhooks_reolink_path, params: body, headers: { "CONTENT_TYPE" => content_type, "HOST" => host }
   end
 
   # ------------------------------------------------------------------ #
@@ -35,6 +35,11 @@ RSpec.describe "Webhooks::ReoLink", type: :request do
   it "does not require authentication" do
     post_reolink(doorbell_payload)
     expect(response).not_to redirect_to(login_path)
+  end
+
+  it "returns 404 when the hostname is not allowlisted" do
+    post_reolink(doorbell_payload, host: "example.com")
+    expect(response).to have_http_status(:not_found)
   end
 
   it "does not require a CSRF token" do

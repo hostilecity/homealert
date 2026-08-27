@@ -10,8 +10,10 @@ Rails.application.routes.draw do
   get  "/auth/failure",                to: "sessions#failure"
 
   # Webhooks (public, no authentication)
-  namespace :webhooks do
-    post "reolink", to: "reolink#create"
+  constraints(lambda { |request| request.host.in?(%w[localhost security-vm.hostilecity.net]) }) do
+    namespace :webhooks do
+      post "reolink", to: "reolink#create"
+    end
   end
 
   # Events feed (AJAX, authenticated)
