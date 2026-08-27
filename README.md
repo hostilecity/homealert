@@ -202,13 +202,13 @@ chmod +x /etc/openvpn/client-connect.sh
 ```bash
 curl -X POST http://localhost:3000/webhooks/vpn_login \
   -H 'Content-Type: application/json' \
-  -d '{
-    "event":          "vpn_login",
-    "username":       "rtulino",
-    "common_name":    "ryans-macbook",
-    "source_ip":      "203.0.113.42",
-    "timestamp_unix": "1756310400"
-  }'
+  -d "{
+    \"event\":          \"vpn_login\",
+    \"username\":       \"rtulino\",
+    \"common_name\":    \"ryans-macbook\",
+    \"source_ip\":      \"203.0.113.42\",
+    \"timestamp_unix\": \"$(date +%s)\"
+  }"
 ```
 
 The `device_name` stored on the event is formatted as `username (common_name)` when both differ, or just the username/common_name alone when they are the same or one is absent. The `source_ip` is stored as `device_id`.

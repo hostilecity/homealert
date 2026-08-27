@@ -3,13 +3,16 @@ require "rails_helper"
 RSpec.describe Webhooks::VpnLoginParser do
   subject(:parser) { described_class.new(payload) }
 
+  let(:fixed_time)   { Time.zone.parse("2026-08-28 09:00:00") }
+  let(:fixed_unix)   { fixed_time.to_i.to_s }
+
   let(:base_payload) do
     {
       "event"          => "vpn_login",
       "username"       => "rtulino",
       "common_name"    => "ryans-macbook",
       "source_ip"      => "203.0.113.42",
-      "timestamp_unix" => "1756310400"
+      "timestamp_unix" => fixed_unix
     }
   end
 
@@ -111,7 +114,7 @@ RSpec.describe Webhooks::VpnLoginParser do
     it "parses a valid unix timestamp string into a Time" do
       result = parser.parse[:occurred_at]
       expect(result).to be_a(Time)
-      expect(result.to_i).to eq(1_756_310_400)
+      expect(result.to_i).to eq(fixed_time.to_i)
     end
 
     it "falls back to Time.current when timestamp_unix is missing" do
