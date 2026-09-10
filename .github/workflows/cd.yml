@@ -55,6 +55,8 @@ jobs:
           REOLINK_USERNAME: ${{ secrets.REOLINK_USERNAME }}
           REOLINK_PASSWORD: ${{ secrets.REOLINK_PASSWORD }}
           REOLINK_CHANNEL: ${{ secrets.REOLINK_CHANNEL }}
+          REOLINK_SCHEME: ${{ secrets.REOLINK_SCHEME }}
+          SNAPSHOT_RETENTION_DAYS: ${{ secrets.SNAPSHOT_RETENTION_DAYS }}
         run: |
           ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "
             cd ${{ env.DEPLOY_DIR }} && \
@@ -89,6 +91,8 @@ jobs:
               -e REOLINK_USERNAME='$REOLINK_USERNAME' \
               -e REOLINK_PASSWORD='$REOLINK_PASSWORD' \
               -e REOLINK_CHANNEL='$REOLINK_CHANNEL' \
+              -e REOLINK_SCHEME='$REOLINK_SCHEME' \
+              -e SNAPSHOT_RETENTION_DAYS='$SNAPSHOT_RETENTION_DAYS' \
               -e SOLID_QUEUE_IN_PUMA='true' \
               ${{ env.APP_NAME }}:latest
           "

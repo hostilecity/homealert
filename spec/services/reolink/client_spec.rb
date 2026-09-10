@@ -33,6 +33,51 @@ RSpec.describe ReoLink::Client do
       expect { described_class.new(host: host, username: username, password: nil) }
         .to raise_error(ReoLink::Client::Error, /REOLINK_PASSWORD/)
     end
+
+    it "defaults the channel to 0 when REOLINK_CHANNEL is unset" do
+      stub_const("ENV", ENV.to_hash.merge("REOLINK_CHANNEL" => nil))
+      client = described_class.new(host: host, username: username, password: password)
+
+      stub_request(:get, %r{\Ahttp://10\.27\.140\.51/cgi-bin/api\.cgi})
+        .with(query: hash_including("channel" => "0"))
+        .to_return(status: 200, body: image_body)
+
+      client.snapshot
+    end
+
+    it "defaults the channel to 0 when REOLINK_CHANNEL is set to an empty string (e.g. an unset deploy secret)" do
+      stub_const("ENV", ENV.to_hash.merge("REOLINK_CHANNEL" => ""))
+      client = described_class.new(host: host, username: username, password: password)
+
+      stub_request(:get, %r{\Ahttp://10\.27\.140\.51/cgi-bin/api\.cgi})
+        .with(query: hash_including("channel" => "0"))
+        .to_return(status: 200, body: image_body)
+
+      client.snapshot
+    end
+
+    it "defaults the scheme to http" do
+      stub_const("ENV", ENV.to_hash.merge("REOLINK_SCHEME" => nil))
+      client = described_class.new(host: host, username: username, password: password)
+
+      stub = stub_request(:get, %r{\Ahttp://10\.27\.140\.51/cgi-bin/api\.cgi})
+        .to_return(status: 200, body: image_body)
+
+      client.snapshot
+
+      expect(stub).to have_been_requested
+    end
+
+    it "uses https when REOLINK_SCHEME is set to https" do
+      client = described_class.new(host: host, username: username, password: password, scheme: "https")
+
+      stub = stub_request(:get, %r{\Ahttps://10\.27\.140\.51/cgi-bin/api\.cgi})
+        .to_return(status: 200, body: image_body)
+
+      client.snapshot
+
+      expect(stub).to have_been_requested
+    end
   end
 
   describe "#snapshot" do

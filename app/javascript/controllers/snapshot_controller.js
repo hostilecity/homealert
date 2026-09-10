@@ -12,12 +12,14 @@ export default class extends Controller {
     if (expanded) {
       this.panelTarget.classList.add("hidden")
       if (this.hasLabelTarget) this.labelTarget.textContent = "Show snapshot"
+      this.buttonTarget.setAttribute("aria-expanded", "false")
     } else {
       if (!this.imageTarget.getAttribute("src")) {
         this.imageTarget.setAttribute("src", this.imageTarget.dataset.src)
       }
       this.panelTarget.classList.remove("hidden")
       if (this.hasLabelTarget) this.labelTarget.textContent = "Hide snapshot"
+      this.buttonTarget.setAttribute("aria-expanded", "true")
     }
   }
 }

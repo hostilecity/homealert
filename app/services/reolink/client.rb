@@ -11,6 +11,7 @@ module ReoLink
     class Error < StandardError; end
 
     DEFAULT_CHANNEL = "0"
+    DEFAULT_SCHEME  = "http"
     OPEN_TIMEOUT    = 5
     READ_TIMEOUT    = 8
 
@@ -19,7 +20,8 @@ module ReoLink
     end
 
     def initialize(host: ENV["REOLINK_HOST"], username: ENV["REOLINK_USERNAME"],
-                   password: ENV["REOLINK_PASSWORD"], channel: ENV.fetch("REOLINK_CHANNEL", DEFAULT_CHANNEL))
+                   password: ENV["REOLINK_PASSWORD"], channel: ENV["REOLINK_CHANNEL"].presence || DEFAULT_CHANNEL,
+                   scheme: ENV["REOLINK_SCHEME"].presence || DEFAULT_SCHEME)
       raise Error, "REOLINK_HOST is not configured"     if host.blank?
       raise Error, "REOLINK_USERNAME is not configured" if username.blank?
       raise Error, "REOLINK_PASSWORD is not configured" if password.blank?
@@ -28,6 +30,7 @@ module ReoLink
       @username = username
       @password = password
       @channel  = channel
+      @scheme   = scheme
     end
 
     # Fetches a still-image snapshot from the camera.
@@ -37,7 +40,8 @@ module ReoLink
     # non-2xx response, empty body).
     def snapshot
       uri      = snapshot_uri
-      response = Net::HTTP.start(uri.host, uri.port, open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT) do |http|
+      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
+                                                       open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT) do |http|
         http.request(Net::HTTP::Get.new(uri))
       end
 
@@ -55,6 +59,12 @@ module ReoLink
 
     private
 
+    # NOTE: ReoLink's CGI API takes the camera password as a plain query
+    # parameter — there's no token/session exchange to avoid it. Set
+    # REOLINK_SCHEME=https if your camera's firmware exposes an HTTPS
+    # listener on its CGI port; over plain HTTP (the default, and the only
+    # option most ReoLink camera firmwares actually support) the password is
+    # only as safe as the local network it travels over.
     def snapshot_uri
       params = {
         cmd:      "Snap",
@@ -64,7 +74,7 @@ module ReoLink
         password: @password
       }
 
-      URI("http://#{@host}/cgi-bin/api.cgi").tap { |uri| uri.query = URI.encode_www_form(params) }
+      URI("#{@scheme}://#{@host}/cgi-bin/api.cgi").tap { |uri| uri.query = URI.encode_www_form(params) }
     end
   end
 end
