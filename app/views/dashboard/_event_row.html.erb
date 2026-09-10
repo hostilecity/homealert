@@ -68,7 +68,7 @@
   <% if event.snapshot.attached? %>
     <div class="hidden px-5 pb-4" id="snapshot-panel-<%= event.id %>" data-snapshot-target="panel">
       <img data-snapshot-target="image"
-           data-src="<%= rails_blob_path(event.snapshot, disposition: "inline") %>"
+           data-src="<%= rails_storage_proxy_path(event.snapshot, disposition: "inline") %>"
            alt="Snapshot from <%= event.device_name %>"
            class="w-full max-w-sm rounded-lg border border-gray-800" />
     </div>
