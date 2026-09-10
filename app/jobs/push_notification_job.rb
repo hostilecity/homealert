@@ -44,7 +44,13 @@ class PushNotificationJob < ApplicationJob
   def snapshot_url(event)
     return unless event.snapshot.attached?
 
-    Rails.application.routes.url_helpers.rails_blob_path(
+    # Use the proxy route (serves bytes directly, 200) rather than the
+    # default redirect route (302 to the disk-service URL). Some Android
+    # push-notification image renderers don't follow the redirect hop the
+    # way a normal <img> load or in-page fetch does, which meant the
+    # snapshot rendered fine on the dashboard but silently never showed up
+    # in the notification itself.
+    Rails.application.routes.url_helpers.rails_storage_proxy_path(
       event.snapshot, only_path: true, disposition: "inline"
     )
   end
