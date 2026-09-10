@@ -6,7 +6,10 @@ module Webhooks
     def create
       attributes = Webhooks::ReoLinkParser.new(payload).parse
       event = Event.create!(attributes)
-      PushNotificationJob.perform_later(event.id)
+      # The push notification is dispatched by SnapshotCaptureJob once the
+      # camera snapshot (if any) has been captured and attached, so an alert
+      # never fires ahead of its photo.
+      SnapshotCaptureJob.perform_later(event.id)
       head :ok
     rescue Webhooks::UnknownEventError => e
       Rails.logger.warn("ReoLink webhook ignored: #{e.message}")

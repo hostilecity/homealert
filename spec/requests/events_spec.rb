@@ -60,6 +60,47 @@ RSpec.describe "Events", type: :request do
         end
       end
 
+      context "with poll=true, an unchanged newest_id, but a new snapshot attachment since the client last polled" do
+        it "returns 200 rather than 204, so a snapshot completed after the row was first rendered is not missed" do
+          event = create(:event)
+          event.snapshot.attach(
+            io: File.open(Rails.root.join("spec/fixtures/files/snapshot.jpg")),
+            filename: "snapshot.jpg",
+            content_type: "image/jpeg"
+          )
+
+          get events_feed_path(poll: true, newest_id: event.id, newest_snapshot_id: 0)
+
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "returns 204 once the client's newest_snapshot_id catches up" do
+          event = create(:event)
+          event.snapshot.attach(
+            io: File.open(Rails.root.join("spec/fixtures/files/snapshot.jpg")),
+            filename: "snapshot.jpg",
+            content_type: "image/jpeg"
+          )
+
+          get events_feed_path(poll: true, newest_id: event.id, newest_snapshot_id: event.snapshot.attachment.id)
+
+          expect(response).to have_http_status(:no_content)
+        end
+
+        it "includes the newest_snapshot_id watermark on the poll wrapper for the client to track" do
+          event = create(:event)
+          event.snapshot.attach(
+            io: File.open(Rails.root.join("spec/fixtures/files/snapshot.jpg")),
+            filename: "snapshot.jpg",
+            content_type: "image/jpeg"
+          )
+
+          get events_feed_path(poll: true, newest_id: event.id, newest_snapshot_id: 0)
+
+          expect(response.body).to include(%(data-newest-snapshot-id="#{event.snapshot.attachment.id}"))
+        end
+      end
+
       # ------------------------------------------------------------------ #
       # cursor / pagination mode                                             #
       # ------------------------------------------------------------------ #

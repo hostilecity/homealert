@@ -17,6 +17,7 @@
        data-controller="feed"
        data-feed-url-value="<%= events_feed_path %>"
        data-feed-newest-id-value="<%= newest_event&.id.to_i %>"
+       data-feed-newest-snapshot-id-value="<%= @newest_snapshot_id.to_i %>"
        data-feed-oldest-occurred-at-value="<%= oldest_event&.occurred_at&.iso8601 %>">
 
     <% if @recent_events_by_date.any? %>

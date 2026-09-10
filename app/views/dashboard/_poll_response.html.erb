@@ -2,6 +2,6 @@
 <div id="poll-stat-cards">
   <%= render "dashboard/stat_cards" %>
 </div>
-<div id="poll-feed-rows">
+<div id="poll-feed-rows" data-newest-snapshot-id="<%= newest_snapshot_id %>">
   <%= render "dashboard/feed_rows", events: events, context: :poll, has_more: has_more %>
 </div>

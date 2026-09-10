@@ -110,6 +110,36 @@ RSpec.describe PushNotificationJob, type: :job do
         expect(parsed["body"]).to eq(event.device_name)
       end
     end
+
+    it "omits the image field when the event has no snapshot attached" do
+      described_class.perform_now(event.id)
+      expect(WebPush).to have_received(:payload_send) do |args|
+        parsed = JSON.parse(args[:message])
+        expect(parsed["image"]).to be_nil
+      end
+    end
+  end
+
+  # ------------------------------------------------------------------ #
+  # Snapshot image payload                                               #
+  # ------------------------------------------------------------------ #
+  describe "when the event has a snapshot attached" do
+    before do
+      create(:notification_preference, user: user, doorbell_pressed: true, motion_detected: true)
+      event.snapshot.attach(
+        io: File.open(Rails.root.join("spec/fixtures/files/snapshot.jpg")),
+        filename: "snapshot.jpg",
+        content_type: "image/jpeg"
+      )
+    end
+
+    it "includes a path to the snapshot in the image field" do
+      described_class.perform_now(event.id)
+      expect(WebPush).to have_received(:payload_send) do |args|
+        parsed = JSON.parse(args[:message])
+        expect(parsed["image"]).to include("/rails/active_storage/")
+      end
+    end
   end
 
   # ------------------------------------------------------------------ #

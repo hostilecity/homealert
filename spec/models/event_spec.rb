@@ -140,4 +140,23 @@ RSpec.describe Event, type: :model do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # Snapshot attachment
+  # ---------------------------------------------------------------------------
+  describe ".newest_snapshot_attachment_id" do
+    let(:image) { Rails.root.join("spec/fixtures/files/snapshot.jpg") }
+
+    it "is 0 when no event has a snapshot attached" do
+      create(:event)
+      expect(described_class.newest_snapshot_attachment_id).to eq(0)
+    end
+
+    it "returns the id of the most recently created snapshot attachment" do
+      event = create(:event)
+      event.snapshot.attach(io: File.open(image), filename: "snapshot.jpg", content_type: "image/jpeg")
+
+      expect(described_class.newest_snapshot_attachment_id).to eq(event.snapshot.attachment.id)
+    end
+  end
 end

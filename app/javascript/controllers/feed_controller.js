@@ -7,6 +7,7 @@ export default class extends Controller {
   static values  = {
     url:               String,
     newestId:          Number,
+    newestSnapshotId:  Number, // watermark for snapshot attachments completing after their event's row was rendered
     oldestOccurredAt:  String  // ISO string of the oldest visible event's occurred_at
   }
 
@@ -22,7 +23,7 @@ export default class extends Controller {
   // ── Polling: replace the entire list + footer if anything is new ──────────
 
   async poll() {
-    const url = `${this.urlValue}?poll=1&newest_id=${this.newestIdValue}`
+    const url = `${this.urlValue}?poll=1&newest_id=${this.newestIdValue}&newest_snapshot_id=${this.newestSnapshotIdValue}`
     const response = await this.fetchResponse(url)
     if (!response) return
 
@@ -42,6 +43,10 @@ export default class extends Controller {
     const feedFragment    = feedRowsWrapper
       ? this.parseFragment(feedRowsWrapper.innerHTML)
       : fragment
+
+    if (feedRowsWrapper?.dataset.newestSnapshotId) {
+      this.newestSnapshotIdValue = parseInt(feedRowsWrapper.dataset.newestSnapshotId, 10) || 0
+    }
 
     // Pull the footer out and replace the footer target
     const newFooter = feedFragment.querySelector("#view-more-footer")

@@ -72,9 +72,14 @@ RSpec.describe "Webhooks::ReoLink", type: :request do
       expect(Event.last.event_type).to eq("doorbell_pressed")
     end
 
-    it "enqueues a PushNotificationJob" do
+    it "enqueues a SnapshotCaptureJob (which dispatches the push notification once the snapshot attempt completes)" do
       expect { post_reolink(doorbell_payload) }
-        .to have_enqueued_job(PushNotificationJob)
+        .to have_enqueued_job(SnapshotCaptureJob)
+    end
+
+    it "does not enqueue a PushNotificationJob directly" do
+      expect { post_reolink(doorbell_payload) }
+        .not_to have_enqueued_job(PushNotificationJob)
     end
   end
 
@@ -93,9 +98,14 @@ RSpec.describe "Webhooks::ReoLink", type: :request do
       expect(Event.last.event_type).to eq("motion_detected")
     end
 
-    it "enqueues a PushNotificationJob" do
+    it "enqueues a SnapshotCaptureJob (which dispatches the push notification once the snapshot attempt completes)" do
       expect { post_reolink(motion_payload) }
-        .to have_enqueued_job(PushNotificationJob)
+        .to have_enqueued_job(SnapshotCaptureJob)
+    end
+
+    it "does not enqueue a PushNotificationJob directly" do
+      expect { post_reolink(motion_payload) }
+        .not_to have_enqueued_job(PushNotificationJob)
     end
   end
 
