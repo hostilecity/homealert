@@ -27,6 +27,11 @@
 
 /public/assets
 
+# Ignore storage (uploaded files, ActiveStorage snapshots) in all environments.
+/storage/*
+!/storage/.keep
+/tmp/storage
+
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 

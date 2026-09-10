@@ -1,6 +1,8 @@
 class Event < ApplicationRecord
   TYPES = %w[doorbell_pressed motion_detected vpn_login].freeze
 
+  has_one_attached :snapshot
+
   validates :event_type,  presence: true, inclusion: { in: TYPES }
   validates :device_name, presence: true
   validates :device_id,   presence: true

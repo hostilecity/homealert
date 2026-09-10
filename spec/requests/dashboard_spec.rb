@@ -44,6 +44,29 @@ RSpec.describe "Dashboard", type: :request do
         # Each event row renders with a data-event-id attribute; assert exactly 10.
         expect(response.body.scan(/data-event-id=/).length).to eq(10)
       end
+
+      it "does not render a snapshot toggle for events without a snapshot" do
+        create(:event)
+        get root_path
+        expect(response.body).not_to include("Show snapshot")
+      end
+
+      it "renders a hidden snapshot toggle for events with a snapshot attached" do
+        event = create(:event)
+        event.snapshot.attach(
+          io: File.open(Rails.root.join("spec/fixtures/files/snapshot.jpg")),
+          filename: "snapshot.jpg",
+          content_type: "image/jpeg"
+        )
+
+        get root_path
+
+        expect(response.body).to include("Show snapshot")
+        expect(response.body).to include('data-controller="snapshot"')
+        # The <img> tag must not carry a src attribute up front — only a
+        # data-src — so the image is never fetched until the user expands it.
+        expect(response.body).to match(/<img[^>]*data-snapshot-target="image"[^>]*data-src="[^"]+"/)
+      end
     end
   end
 end

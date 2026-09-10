@@ -20,7 +20,8 @@ class PushNotificationJob < ApplicationJob
     payload = JSON.generate(
       title: notification_title(event),
       body:  event.device_name,
-      path:  "/"
+      path:  "/",
+      image: snapshot_url(event)
     )
 
     vapid = {
@@ -39,6 +40,14 @@ class PushNotificationJob < ApplicationJob
   end
 
   private
+
+  def snapshot_url(event)
+    return unless event.snapshot.attached?
+
+    Rails.application.routes.url_helpers.rails_blob_path(
+      event.snapshot, only_path: true, disposition: "inline"
+    )
+  end
 
   def deliver(subscription, payload, vapid, event)
     WebPush.payload_send(

@@ -97,6 +97,22 @@ VAPID_PRIVATE_KEY=generated-private-key
 - Keys must remain stable — changing them invalidates all existing push subscriptions.
 - Keep `VAPID_PRIVATE_KEY` secret.
 
+### Camera snapshots (ReoLink)
+
+When the `/webhooks/reolink` endpoint receives a doorbell or motion event, HomeAlert fetches a still-image snapshot directly from the camera's HTTP API before the push notification is sent, and stores it against the `Event`. The push notification and the dashboard's event list both surface the snapshot once it's available.
+
+| Variable | Description |
+|---|---|
+| `REOLINK_HOST` | Camera IP/hostname, e.g. `10.27.140.51` |
+| `REOLINK_USERNAME` | Camera API username |
+| `REOLINK_PASSWORD` | Camera API password |
+| `REOLINK_CHANNEL` | Camera channel to snap (default `0`) |
+
+- Snapshot capture is skipped entirely (no error) when `REOLINK_HOST` is blank — useful for local development without camera access.
+- A camera being offline/unreachable never blocks or drops the push notification; it's just delivered without a photo, and the failure is logged.
+- Snapshots are stored via ActiveStorage on local disk (see `config/storage.yml`). In production, `/rails/storage` inside the container must be mounted to a persistent volume so snapshots survive container recreation on deploy.
+- On the dashboard, a snapshot is hidden behind a "Show snapshot" toggle on its event row and is only fetched from the server once expanded, since each image can be several hundred KB.
+
 ### Background job processing
 
 Push notifications are dispatched asynchronously by `PushNotificationJob`. In production the Active Job backend is Solid Queue, so **a worker must be running or notifications are enqueued and never sent** — the web app keeps recording events normally, which makes the failure easy to miss.

@@ -51,12 +51,19 @@ jobs:
           ALLOWED_EMAILS: ${{ secrets.ALLOWED_EMAILS }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          REOLINK_HOST: ${{ secrets.REOLINK_HOST }}
+          REOLINK_USERNAME: ${{ secrets.REOLINK_USERNAME }}
+          REOLINK_PASSWORD: ${{ secrets.REOLINK_PASSWORD }}
+          REOLINK_CHANNEL: ${{ secrets.REOLINK_CHANNEL }}
         run: |
           ssh ${{ env.TARGET_VM_USER }}@${{ env.TARGET_VM_HOST }} "
             cd ${{ env.DEPLOY_DIR }} && \
           
             echo '==> Verifying database network exists...' && \
             docker network inspect ${{ env.DB_NETWORK }} >/dev/null && \
+
+            echo '==> Ensuring persistent storage volume exists...' && \
+            docker volume create ${{ env.APP_NAME }}_storage >/dev/null && \
 
             echo '==> Building Docker Image...' && \
             docker build -t ${{ env.APP_NAME }}:latest . && \
@@ -70,6 +77,7 @@ jobs:
               -p 80:80 \
               --network ${{ env.DB_NETWORK }} \
               --restart unless-stopped \
+              -v ${{ env.APP_NAME }}_storage:/rails/storage \
               -e RAILS_MASTER_KEY='$RAILS_MASTER_KEY' \
               -e DATABASE_PASSWORD='$DATABASE_PASSWORD' \
               -e GOOGLE_CLIENT_ID='$GOOGLE_CLIENT_ID' \
@@ -77,6 +85,10 @@ jobs:
               -e ALLOWED_EMAILS='$ALLOWED_EMAILS' \
               -e VAPID_PUBLIC_KEY='$VAPID_PUBLIC_KEY' \
               -e VAPID_PRIVATE_KEY='$VAPID_PRIVATE_KEY' \
+              -e REOLINK_HOST='$REOLINK_HOST' \
+              -e REOLINK_USERNAME='$REOLINK_USERNAME' \
+              -e REOLINK_PASSWORD='$REOLINK_PASSWORD' \
+              -e REOLINK_CHANNEL='$REOLINK_CHANNEL' \
               -e SOLID_QUEUE_IN_PUMA='true' \
               ${{ env.APP_NAME }}:latest
           "
